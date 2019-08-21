@@ -1,0 +1,3 @@
+git@github.com:keedio-sense/ks-alertmanager.git:0.1-beta
+git@github.com:keedio-sense/ks-prometheus.git:0.1-beta
+git@github.com:keedio-sense/ks-grafana-meta.git:0.1-beta

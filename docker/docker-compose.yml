@@ -1,0 +1,90 @@
+#title           :docker-compose.yml
+#description     :Docker Compose file to deploy de KloudSense System
+#author          :Alejandro Villegas Lopez (avillegas@keedio.com) and Raul Barroso (rbarroso@keedio.com).
+#===============================================================================
+
+
+
+
+#===============================================================================
+# KloudSense
+#===============================================================================
+version: '3.2'
+
+services:
+  grafana-meta:
+    image: keedio/ks-grafana-meta:0.1-beta
+    restart: always
+    container_name: ks-grafana-meta
+    hostname: ks-grafana-meta
+    ports:
+      - "80:3000"
+    networks:
+      ks_net:
+        ipv4_address: 172.16.1.1
+    extra_hosts:
+      - "prometheus:172.16.2.1"
+
+
+
+
+  prometheus:
+    image: keedio/ks-prometheus:0.1-beta
+    restart: always
+    container_name: ks-prometheus
+    hostname: ks-prometheus
+    ports:
+      - "50000:9090"
+    networks:
+      ks_net:
+        ipv4_address: 172.16.2.1
+    depends_on:
+      - grafana-meta
+    extra_hosts:
+      - "prometheus:172.16.2.1"
+      - "keefana:172.16.1.1"
+      - "alertmanager:172.16.4.1"
+
+
+
+
+  alertmanager:
+    image: keedio/ks-alertmanager:0.1-beta
+    restart: always
+    container_name: ks-alertmanager
+    hostname: ks-alertmanager
+    networks:
+      ks_net:
+        ipv4_address: 172.16.4.1
+    depends_on:
+      - prometheus
+    ports:
+      - "60000:9093"
+    extra_hosts:
+      - "prometheus:172.16.2.1"
+
+
+
+#=============================
+# Networking
+#===============================================================================
+networks:
+  ks_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.0.0/16
+          # SUBNETS
+          # Front_End:
+          #     172.16.1.XXX
+          #
+          # Prometheus:
+          #     172.16.2.XXX
+          #
+          # Exporters:
+          #     172.16.3.XXX
+          #
+          # Alert-Managers:
+          #     172.16.4.XXX
+          #
