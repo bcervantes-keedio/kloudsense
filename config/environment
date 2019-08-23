@@ -1,23 +1,27 @@
 #!/bin/bash -
 #title           :environment
-#description     :Script to activate the KS terminal administration mode.
+#description     :Script to configure the KloudSense CLI.
 #author          :Alejandro Villegas Lopez (avillegas@keedio.com).
-#date            :07/06/2019
-#usage           :source environment
-#notes           :Warning! I recommend execute this script on a subshell.
 #===============================================================================
 
 
 #=============================
 # KS Variables
 #===============================================================================
+# Public Variables
+KS_HOME="$( cd "$(dirname "$0")" ; pwd -P )"
+
+# Private Variables
 _KS_TRUE=1
 _KS_FALSE=0
 _KS_OK_CODE=0
 _KS_ERR_CODE=1
+_KS_CURRENT_MODE="none"
+_KS_MODULES_FILE=""
+_KS_MODE_DOCKERCOMPOSE_FILE=""
+_KS_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+_KS_MODE_DOCKERCOMPOSE_FILE=""
 
-KS_HOME="$( cd "$(dirname "$0")" ; pwd -P )"
-source $KS_HOME/config/kloudsense.properties
 
 
 
@@ -25,27 +29,33 @@ source $KS_HOME/config/kloudsense.properties
 #=============================
 # MSG Functions
 #===============================================================================
+
+# Error Message
 function _ks_err_msg () {
-  echo -e "\033[37m[\033[31mx\033[37m] \033[37m$@\033[0m"
+  echo -e "\033[37m[\033[31mx\033[37m]\033[0m $@"
+}                                             
+                                              
+# Warning Message                             
+function _ks_war_msg () {                     
+  echo -e "\033[37m[\033[33m!\033[37m]\033[0m $@"
+}                                             
+                                              
+# OK Message                                  
+function _ks_ok_msg () {                      
+  echo -e "\033[37m[\033[32m+\033[37m]\033[0m $@"
+}                                             
+                                              
+# Info Message                                
+function _ks_info_msg () {                    
+  echo -e "\033[37m[\033[34m*\033[37m]\033[0m $@"
 }
 
-function _ks_war_msg () {
-  echo -e "\033[37m[\033[33m!\033[37m] \033[37m$@\033[0m"
-}
-
-function _ks_ok_msg () {
-  echo -e "\033[37m[\033[32m+\033[37m] \033[37m$@\033[0m"
-}
-
-function _ks_info_msg () {
-  echo -e "\033[37m[\033[34m*\033[37m] \033[37m$@\033[0m"
-}
 
 
 
 
 #=============================
-# Images Management Module
+# Images Management
 #===============================================================================
 
 # Aux Function to return the name of the KS image present on Dockerfile
@@ -56,28 +66,6 @@ function _ks_get_dockerfile_image_name () {
   echo "$vendor/$image_name:$version"
 }
 
-
-# Build all the KloudSense docker images
-function _ks_image_build () {
-  # Build Process
-  _ks_info_msg "Building KloudSense Images..."
-  for module in $(find modules -name Dockerfile); do
-    # Get Image Name
-    image_name="$(_ks_get_dockerfile_image_name)"
-    _ks_info_msg "\033[31mImage Name:\033[033m $image_name"
-
-    # Image Building
-    docker build -t $image_name $(dirname $module)/ >/dev/null
-    [[ $? -ne 0 ]] && { retval=1; _ks_err_msg "Error on Image Building: $image_name"; }
-  done
-
-  # Removing residual images
-  _ks_info_msg "Removing residual images"
-  docker rmi $(docker images | grep none | awk '{ print $3 }') &>/dev/null
-  _ks_ok_msg "Building Success"
-}
-
-
 # Clean all KS docker images
 function _ks_image_clean () {
   _ks_info_msg "Cleanning KS Images..."
@@ -85,7 +73,6 @@ function _ks_image_clean () {
   docker images -a | grep "$KS_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
   [[ $? -eq 0 ]] && { _ks_ok_msg "Cleanning KS Images Success"; } || { _ks_err_msg "Cleanning KS Images Error"; }
 }
-
 
 # Print all the KS images
 function _ks_image_list () {
@@ -142,7 +129,6 @@ function _ks_image_box () {
   _ks_ok_msg "Compresion Successful"
 }
 
-
 # Extract the image files of a tar file
 function _ks_image_unbox () {
   local tar_file_name=$1
@@ -154,12 +140,10 @@ function _ks_image_unbox () {
 
 # Prints Image Module Help Message 
 function _ks_image_help () {
-  printf "KS Image Module:
+  printf "KloudSense CLI Image Management:
   \n  Usage:   ks image <command> [options]\n
   Image Commands:
-    build                    Build all the KS images
     clean                    Remove all the KS images
-    rebuild                  Remove and Build all the KS images
     list                     List all the current KS builded images
     export                   Save in \"docker/docker_images\" folder all the KS builded images
     import                   Load from \"docker/docker_images\" folder all the KS available images
@@ -169,17 +153,51 @@ function _ks_image_help () {
 \n"
 }
 
+# Menu image function
+function _ks_image_menu () {
+  local cmd=$1
+  shift
+  case "$cmd" in
+    clean)
+      _ks_image_clean
+      ;;
+    list)
+      _ks_image_list
+      ;;
+    export)
+      _ks_image_export
+      ;;
+    import)
+      _ks_image_import
+      ;;
+    box)
+      _ks_image_box $@
+      ;;
+    unbox)
+      _ks_image_unbox $@
+      ;;
+    help)
+      _ks_image_help
+      ;;
+    *)
+      _ks_err_msg "Unrecogniced Image command"
+      _ks_image_help
+      ;;
+  esac
+}
+
+
 
 
 
 #=============================
-# System Management Module
+# System Management
 #===============================================================================
 
 # Run a command system for docker-compose management
 function _ks_system_cmd () {
   cd $KS_HOME/docker
-  docker-compose $@
+  docker-compose -f $_KS_MODE_DOCKERCOMPOSE_FILE $@
   cd $KS_HOME
 }
 
@@ -221,16 +239,16 @@ function _ks_system_ps () {
 # Print the status of KS in docker
 function _ks_system_status () {
   local status="$(_ks_system_cmd ps)"
-  local n_services=$(echo "$status" | grep -e "^ks_" | wc -l)
+  local n_services=$(echo "$status" | grep -e "^$KS_IMAGE_PREFIX" | wc -l)
   local n_up_status=$(echo "$status" | grep -e "Up" | wc -l)
   
   [[ $n_services -eq 0 ]] && { _ks_war_msg "KloudSense is \033[33mSTOPPED\033[0m"; return; }
   [[ $n_services -eq $n_up_status ]] && { _ks_ok_msg "KloudSense is \033[32mUP\033[0m"; } || {  _ks_err_msg "KloudSense is \033[31mERROR\033[0m"; }
 }
 
-# Help Message for System module
+# Help Message for System
 function _ks_system_help () {
-  printf "KS System Module:
+  printf "KloudSense CLI System Management:
   \n  Usage:   ks system <command> [options]\n
   System Commands:
     up                       Build and start all the containers for the selected profile
@@ -244,11 +262,135 @@ function _ks_system_help () {
 \n"
 }
 
+# Menu System function
+function _ks_system_menu () {
+  local cmd=$1
+  shift
+  _ks_is_mode_selected
+  [[ $? -eq $_KS_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
+  case "$cmd" in
+    up)
+      _ks_system_up
+      ;;
+    down)
+      _ks_system_down
+      ;;
+    start)
+      _ks_system_start
+      ;;
+    stop)
+      _ks_system_stop
+      ;;
+    restart)
+      _ks_system_restart
+      ;;
+    logs)
+      _ks_system_logs
+      ;;
+    ps)
+      _ks_system_ps
+      ;;
+    status)
+      _ks_system_status
+      ;;
+    help)
+      _ks_system_help
+      ;;
+    *)
+      _ks_err_msg "Unrecogniced System command"
+      _ks_system_help
+      ;;
+  esac
+}
+
+
 
 
 
 #=============================
-# System Management Module
+# Module Management
+#===============================================================================
+
+# Set a deploy mode ( cloudera / dcos / none )
+function _ks_mode_set () {
+  local mode=$1
+  _KS_CURRENT_MODE="$mode"
+  case "$mode" in
+    cloudera)
+      _KS_MODULES_FILE=$KS_MODULES_CLOUDERA_FILE
+      _KS_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_CLOUDERA_FILE
+      _KS_MODE_PROMPT_STR="\033[31m[CLOUDERA]\033[0m"
+      ;;
+    dcos)
+      _KS_MODULES_FILE=$KS_MODULES_DCOS_FILE
+      _KS_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_DCOS_FILE
+      _KS_MODE_PROMPT_STR="\033[31m[DC/OS]\033[0m"
+      ;;
+    none)
+      _KS_MODULES_FILE=""
+      _KS_MODE_DOCKERCOMPOSE_FILE=""
+      _KS_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+      ;;
+  esac
+  _ks_info_msg "Mode set to: $mode"
+}
+
+# Return a string for the prompt with the current mode
+function _ks_mode_prompt () {
+  echo -e "$_KS_MODE_PROMPT_STR"
+}
+
+# Check if a mode is selected
+function _ks_is_mode_selected () {
+  if [[ $_KS_CURRENT_MODE == "none" ]]; then
+    return $_KS_FALSE
+  else
+    return $_KS_TRUE
+  fi
+}
+
+# Help Message for Mode
+function _ks_mode_help () {
+  printf "KloudSense CLI deploy Mode Management:
+  \n  Usage:   ks system <command> [options]\n
+  Mode Commands:
+    cloudera                 Set the deploy mode for Cloudera
+    dcos                     Set the deploy mode for DC/OS
+    none                     Unset the deploy mode
+    help                     Print this message
+\n"
+}
+
+# Menu System function
+function _ks_mode_menu () {
+  local cmd=$1
+  shift
+  case "$cmd" in
+    cloudera)
+      _ks_mode_set "cloudera"
+      ;;
+    dcos)
+      _ks_mode_set "dcos"
+      ;;
+    none)
+      _ks_mode_set "none"
+      ;;
+    help)
+      _ks_mode_help
+      ;;
+    *)
+      _ks_err_msg "Unrecogniced Mode command"
+      _ks_mode_help
+      ;;
+  esac
+}
+
+
+
+
+
+#=============================
+# Module Management
 #===============================================================================
 
 # Aux function to get the url of the module
@@ -263,7 +405,7 @@ function _ks_get_module_version () {
 
 # Aux function to get the name of the module
 function _ks_get_module_name () {
-  echo $1 | sed 's/git@github.com:keedio-sense\///g;s/\.git:.*$//g'
+  echo $1 | sed 's/git@github.com:kloudsense\///g;s/\.git:.*$//g'
 }
 
 # Aux function to check if a docker image exists locally
@@ -318,8 +460,8 @@ function _ks_module_list_modules () {
   while IFS= read -r line; do
     version="$(_ks_get_module_version $line)"
     name="$(_ks_get_module_name $line)"
-    _ks_info_msg "\033[31mModule Name:\033[033m $name:$version\r\033[60C$(_ks_return_module_present_string $name:$version) $(_ks_return_module_pulled_string $name)"
-  done < $KS_HOME/modules/modules.github
+    _ks_info_msg "\033[31mModule Name:\033[033m $name:$version\r\033[80C$(_ks_return_module_present_string $name:$version) $(_ks_return_module_pulled_string $name)"
+  done < $_KS_MODULES_FILE
 }
 
 # Pull module
@@ -327,11 +469,7 @@ function _ks_module_pull_module () {
   [[ -z $1 ]] && { return $_KS_FALSE; }
   local repo_url=$1
   local repo_dir=$2
-  local output="$(git clone $repo_url $repo_dir 2>&1)"
-  if [[ $? -ne 0 ]]; then
-    echo $output
-    return $_KS_FALSE
-  fi
+  git clone $repo_url $repo_dir
   return $_KS_TRUE  
 }
 
@@ -342,7 +480,7 @@ function _ks_module_pull_modules () {
     name="$(_ks_get_module_name $line)"
     _ks_info_msg "\033[31mPulling Module:\033[033m $url"
     _ks_module_pull_module $url $KS_MODULES_DOWNLOAD_DIR$name
-  done < $KS_HOME/modules/modules.github
+  done < $_KS_MODULES_FILE
 }
 
 # Clean pulled modules
@@ -378,14 +516,14 @@ function _ks_module_build_modules () {
     local version="$(_ks_get_module_version $line)"
     _ks_info_msg "\033[31mBuilding Module:\033[033m $name"
     _ks_module_build_module $name $version
-  done < $KS_HOME/modules/modules.github
+  done < $_KS_MODULES_FILE
 }
 
 # Help Message for Module module
 function _ks_module_help () {
-  printf "KS Module:
+  printf "KloudSense CLI Module Management:
   \n  Usage:   ks module <command>\n
-  System Commands:
+  Module Commands:
     list                     List and print the status of the KloudSense modules
     pull                     Pull the repositories of the defined modules defined in 'modules/modules.github' file
     clean                    Clean all the repositories of the modules pulled
@@ -394,180 +532,12 @@ function _ks_module_help () {
 \n"
 }
 
-
-
-
-
-#=============================
-# Info methods
-#===============================================================================
-# Welcome msg
-function _ks_welcome () {
-  printf "\033[34m \n\
-################################################################################\n\
-Keedio's \033[36mKloudSense\033[34m command line interface:\n\
-Version: \033[36m$KS_VERSION\033[34m\n\
-\n\
-$(cat config/logo.txt)
-\n\
-\033[37mTo get the help message type:  \033[1;33mks help\033[0;34m\n\
-################################################################################\n\
-\033[0m\n"
-}
-
-
-# Print Current Version
-function _ks_print_version () {
-  echo "$KS_VERSION"
-}
-
-
-# KS command usage function
-function _ks_usage_msg () {
-  printf "\n  KloudSense $(_ks_print_version)\n"
-  printf "\n  Usage:   ks <module> <command> [options]\n"
-  printf "\n  Modules:
-    image           Manage docker images
-    system          Manage system actions
-    module          Manage module actions
-    version         Print Version information
-\n"
-}
-
-
-
-
-#=============================
-# Main
-#===============================================================================
-alias ks="_ks_top_menu $@"
-
-# Menu Master function
-function _ks_top_menu () {
-  local cmd=$1
-  case "$cmd" in
-    image)
-      shift
-      _ks_image_menu $@
-      ;;
-    images)
-      shift
-      _ks_image_list
-      ;;
-    system)
-      shift
-      _ks_system_menu $@
-      ;;
-    module)
-      shift
-      _ks_module_menu $@
-      ;;
-    version)
-      shift
-      _ks_print_version
-      ;;
-    help)
-      _ks_usage_msg
-      ;;
-    *)
-      _ks_err_msg "Unrecogniced module"
-      _ks_usage_msg
-      ;;
-  esac
-}
-
-
-
-
-# Menu image function
-function _ks_image_menu () {
-  local cmd=$1
-  shift
-  case "$cmd" in
-    build)
-      _ks_image_build
-      ;;
-    clean)
-      _ks_image_clean
-      ;;
-    rebuild)
-      _ks_image_clean
-      _ks_image_build
-      ;;
-    list)
-      _ks_image_list
-      ;;
-    export)
-      _ks_image_export
-      ;;
-    import)
-      _ks_image_import
-      ;;
-    box)
-      _ks_image_box $@
-      ;;
-    unbox)
-      _ks_image_unbox $@
-      ;;
-    help)
-      _ks_image_help
-      ;;
-    *)
-      _ks_err_msg "Unrecogniced Image command"
-      _ks_image_help
-      ;;
-  esac
-}
-
-
-
-
-# Menu System function
-function _ks_system_menu () {
-  local cmd=$1
-  shift
-  case "$cmd" in
-    up)
-      _ks_system_up
-      ;;
-    down)
-      _ks_system_down
-      ;;
-    start)
-      _ks_system_start
-      ;;
-    stop)
-      _ks_system_stop
-      ;;
-    restart)
-      _ks_system_restart
-      ;;
-    logs)
-      _ks_system_logs
-      ;;
-    ps)
-      _ks_system_ps
-      ;;
-    status)
-      _ks_system_status
-      ;;
-    help)
-      _ks_system_help
-      ;;
-    *)
-      _ks_err_msg "Unrecogniced System command"
-      _ks_system_help
-      ;;
-  esac
-}
-
-
-
-
 # Menu Module function
 function _ks_module_menu () {
   local cmd=$1
   shift
+  _ks_is_mode_selected
+  [[ $? -eq $_KS_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
   case "$cmd" in
     list)
       _ks_module_list_modules
@@ -594,4 +564,88 @@ function _ks_module_menu () {
 
 
 
+
+#=============================
+# Info methods
+#===============================================================================
+
+# Welcome msg
+function _ks_welcome () {
+  printf "\033[34m \n\
+################################################################################\n\
+Keedio's \033[36mKloudSense\033[34m command line interface:\n\
+Version: \033[36m$KS_VERSION\033[34m\n\
+\n\
+$(cat config/logo.txt)
+\n\
+\033[37mTo get the help message type:  \033[1;33mks help\033[0;34m\n\
+################################################################################\n\
+\033[0m\n"
+}
+
+# Print Current Version
+function _ks_print_version () {
+  echo "$KS_VERSION"
+}
+
+# KS command usage function
+function _ks_usage_msg () {
+  printf "\n  KloudSense $(_ks_print_version)\n"
+  printf "\n  Usage:   ks <module> <command> [options]\n"
+  printf "\n  Modules:
+    image           Manage docker images
+    system          Manage system actions
+    mode            Manage deploys modes ( Cloudera / DCOS )
+    module          Manage module actions
+    version         Print Version information
+\n"
+}
+
+# Menu Master function
+function _ks_top_menu () {
+  local cmd=$1
+  case "$cmd" in
+    image)
+      shift
+      _ks_image_menu $@
+      ;;
+    images)
+      shift
+      _ks_image_list
+      ;;
+    system)
+      shift
+      _ks_system_menu $@
+      ;;
+    mode)
+      shift
+      _ks_mode_menu $@
+      ;;
+    module)
+      shift
+      _ks_module_menu $@
+      ;;
+    version)
+      shift
+      _ks_print_version
+      ;;
+    help)
+      _ks_usage_msg
+      ;;
+    *)
+      _ks_err_msg "Unrecogniced module"
+      _ks_usage_msg
+      ;;
+  esac
+}
+
+
+
+
+
+#=============================
+# Main
+#===============================================================================
+alias ks="_ks_top_menu $@"
+source $KS_HOME/config/kloudsense.properties
 _ks_welcome

@@ -1,6 +1,6 @@
 #title           :docker-compose.yml
 #description     :Docker Compose file to deploy de KloudSense System
-#author          :Alejandro Villegas Lopez (avillegas@keedio.com) and Raul Barroso (rbarroso@keedio.com).
+#author          :Alejandro Villegas Lopez (avillegas@keedio.com).
 #===============================================================================
 
 
@@ -12,11 +12,11 @@
 version: '3.2'
 
 services:
-  grafana-meta:
+  grafana:
     image: keedio/ks-grafana-meta:0.1-beta
-    restart: always
-    container_name: ks-grafana-meta
-    hostname: ks-grafana-meta
+    restart: on-failure
+    container_name: ks-dcos-grafana
+    hostname: ks-dcos-grafana
     ports:
       - "80:3000"
     networks:
@@ -24,44 +24,85 @@ services:
         ipv4_address: 172.16.1.1
     extra_hosts:
       - "prometheus:172.16.2.1"
+    volumes:
+      - type: bind
+        source: ../dcos/grafana/grafana.ini
+        target: /etc/grafana/grafana.ini
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=frontend"
 
 
 
 
   prometheus:
     image: keedio/ks-prometheus:0.1-beta
-    restart: always
-    container_name: ks-prometheus
-    hostname: ks-prometheus
+    restart: on-failure
+    container_name: ks-dcos-prometheus
+    hostname: ks-dcos-prometheus
     ports:
-      - "50000:9090"
+      - "60000:9090"
     networks:
       ks_net:
         ipv4_address: 172.16.2.1
     depends_on:
-      - grafana-meta
+      - grafana
     extra_hosts:
       - "prometheus:172.16.2.1"
-      - "keefana:172.16.1.1"
+      - "grafana:172.16.1.1"
       - "alertmanager:172.16.4.1"
+    volumes:
+      - type: bind
+        source: ../dcos/system/resolv.conf
+        target: /etc/resolv.conf
+      - type: bind
+        source: ../dcos/prometheus/rules.yml
+        target: /etc/prometheus/rules.yml
+      - type: bind
+        source: ../dcos/prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=short term storage"
 
 
 
 
   alertmanager:
     image: keedio/ks-alertmanager:0.1-beta
-    restart: always
-    container_name: ks-alertmanager
-    hostname: ks-alertmanager
+    restart: on-failure
+    container_name: ks-dcos-alertmanager
+    hostname: ks-dcos-alertmanager
     networks:
       ks_net:
         ipv4_address: 172.16.4.1
     depends_on:
       - prometheus
     ports:
-      - "60000:9093"
+      - "60100:9093"
     extra_hosts:
       - "prometheus:172.16.2.1"
+    volumes:
+      - type: bind
+        source: ../dcos/alertmanager/alertmanager.yml
+        target: /etc/alertmanager/alertmanager.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=alert management"
+
+
+
+
+
+#=============================
+# Networking
+#===============================================================================
+volumes:
+  prometheus_data:
+
 
 
 

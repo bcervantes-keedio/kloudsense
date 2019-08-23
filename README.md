@@ -19,4 +19,4 @@ KloudSense Observability System.
 
 
 ## License
-KloudSense is distributed under [Apache 2.0 License](https://github.com/keedio-sense/kloudsense/blob/master/LICENSE)
+KloudSense is distributed under [Apache 2.0 License](https://github.com/kloudsense/kloudsense/blob/master/LICENSE)
