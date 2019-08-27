@@ -13,7 +13,7 @@ version: '3.2'
 
 services:
   grafana:
-    image: keedio/ks-grafana-meta:0.1-beta
+    image: keedio/ks-grafana-meta:0.2-beta
     restart: always
     container_name: ks-cloudera-grafana
     hostname: ks-cloudera-grafana
@@ -29,7 +29,7 @@ services:
 
 
   prometheus:
-    image: keedio/ks-prometheus:0.1-beta
+    image: keedio/ks-prometheus:0.2-beta
     restart: always
     container_name: ks-cloudera-prometheus
     hostname: ks-cloudera-prometheus
@@ -39,7 +39,7 @@ services:
       ks_net:
         ipv4_address: 172.16.2.1
     depends_on:
-      - grafana-meta
+      - grafana
     extra_hosts:
       - "prometheus:172.16.2.1"
       - "keefana:172.16.1.1"
@@ -49,7 +49,7 @@ services:
 
 
   alertmanager:
-    image: keedio/ks-alertmanager:0.1-beta
+    image: keedio/ks-alertmanager:0.2-beta
     restart: always
     container_name: ks-cloudera-alertmanager
     hostname: ks-cloudera-alertmanager
