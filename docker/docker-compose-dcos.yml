@@ -13,7 +13,7 @@ version: '3.2'
 
 services:
   grafana:
-    image: keedio/ks-grafana-meta:0.1-beta
+    image: keedio/ks-grafana-dcos:0.1-beta
     restart: on-failure
     container_name: ks-dcos-grafana
     hostname: ks-dcos-grafana
