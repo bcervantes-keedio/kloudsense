@@ -20,7 +20,7 @@ services:
     ports:
       - "80:3000"
     networks:
-      ks_net:
+      ks_dcos_net:
         ipv4_address: 172.16.1.1
     extra_hosts:
       - "prometheus:172.16.2.1"
@@ -43,7 +43,7 @@ services:
     ports:
       - "60000:9090"
     networks:
-      ks_net:
+      ks_dcos_net:
         ipv4_address: 172.16.2.1
     depends_on:
       - grafana
@@ -51,6 +51,7 @@ services:
       - "prometheus:172.16.2.1"
       - "grafana:172.16.1.1"
       - "alertmanager:172.16.4.1"
+      - "cp-adapter:172.16.2.2"
     volumes:
       - type: bind
         source: ../dcos/system/resolv.conf
@@ -71,13 +72,98 @@ services:
 
 
 
+  cp-adapter:
+    image: keedio/ks-cp-adapter:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-cp-adapter
+    hostname: ks-dcos-cp-adapter
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.2.2
+    depends_on:
+      - prometheus
+    extra_hosts:
+      - "prometheus:172.16.2.1"
+      - "cratedb-endpoint:172.16.6.1"
+    volumes:
+      - type: bind
+        source: ../dcos/cp-adapter/config.yml
+        target: /config.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=CrateDB-Prometheus Adapter"
+
+
+  cratedb-ce-node-01:
+    image: keedio/ks-cratedb-ce:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-cratedb-ce-node-01
+    hostname: ks-dcos-cratedb-ce-node-01
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.6.1
+    depends_on:
+      - cp-adapter
+    ports:
+      - "4200:4200"
+    volumes:
+      - type: bind
+        source: ../dcos/cratedb/node-01/crate.yml
+        target: /crate-ce/config/crate.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=long term storage"
+
+
+  cratedb-ce-node-02:
+    image: keedio/ks-cratedb-ce:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-cratedb-ce-node-02
+    hostname: ks-dcos-cratedb-ce-node-02
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.6.2
+    depends_on:
+      - cp-adapter
+    ports:
+      - "4201:4200"
+    volumes:
+      - type: bind
+        source: ../dcos/cratedb/node-02/crate.yml
+        target: /crate-ce/config/crate.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=long term storage"
+
+
+  cratedb-ce-node-03:
+    image: keedio/ks-cratedb-ce:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-cratedb-ce-node-03
+    hostname: ks-dcos-cratedb-ce-node-03
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.6.3
+    depends_on:
+      - cp-adapter
+    ports:
+      - "4202:4200"
+    volumes:
+      - type: bind
+        source: ../dcos/cratedb/node-03/crate.yml
+        target: /crate-ce/config/crate.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+      - "kloudsense.type=long term storage"
+
+
   alertmanager:
     image: keedio/ks-alertmanager:0.2-beta
     restart: on-failure
     container_name: ks-dcos-alertmanager
     hostname: ks-dcos-alertmanager
     networks:
-      ks_net:
+      ks_dcos_net:
         ipv4_address: 172.16.4.1
     depends_on:
       - prometheus
@@ -102,6 +188,9 @@ services:
 #===============================================================================
 volumes:
   prometheus_data:
+  crate_node_01_data:
+  crate_node_02_data:
+  crate_node_03_data:
 
 
 
@@ -110,7 +199,7 @@ volumes:
 # Networking
 #===============================================================================
 networks:
-  ks_net:
+  ks_dcos_net:
     driver: bridge
     ipam:
       driver: default
@@ -128,4 +217,7 @@ networks:
           #
           # Alert-Managers:
           #     172.16.4.XXX
+          #
+          # CrateDB:
+          #     172.16.6.XXX
           #

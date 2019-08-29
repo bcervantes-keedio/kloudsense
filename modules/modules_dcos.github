@@ -2,3 +2,5 @@ git@github.com:kloudsense/ks-alertmanager.git:0.2-beta
 git@github.com:kloudsense/ks-prometheus.git:0.2-beta
 git@github.com:kloudsense/ks-grafana-meta.git:0.2-beta
 git@github.com:kloudsense/ks-grafana-dcos.git:0.1-beta
+git@github.com:kloudsense/ks-cratedb-ce.git:0.1-beta
+git@github.com:kloudsense/ks-cp-adapter.git:0.1-beta

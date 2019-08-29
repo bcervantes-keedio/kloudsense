@@ -46,3 +46,8 @@ scrape_configs:
       type: A
       port: 61091
 
+remote_write:
+   - url: http://cp-adapter:9268/write
+remote_read:
+   - url: http://cp-adapter:9268/read
+
