@@ -16,7 +16,7 @@ _KS_TRUE=1
 _KS_FALSE=0
 _KS_OK_CODE=0
 _KS_ERR_CODE=1
-_KS_CURRENT_MODE="none"
+_KS_MODE_CURRENT="none"
 _KS_MODULES_FILE=""
 _KS_MODE_DOCKERCOMPOSE_FILE=""
 _KS_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
@@ -213,6 +213,33 @@ function _ks_image_menu () {
 # System Management
 #===============================================================================
 
+# Run the cluster init config to deploy
+function _ks_system_bootstrap () {
+  case "$_KS_MODE_CURRENT" in
+    dcos)
+      _ks_info_msg "Launching DC/OS monitoring Bootstrap"
+      bash ./dcos/bootstrap/bootstrap_dcos.sh
+      if [[ $? -eq 0 ]]; then
+        _ks_ok_msg "DC/OS monitoring Bootstrap OK"
+      else 
+        _ks_err_msg "DC/OS monitoring Bootstrap ERROR"
+      fi
+      ;;
+    cloudera)
+      _ks_info_msg "Launching Cloudera monitoring Bootstrap"
+      bash ./cloudera/bootstrap/bootstrap_cloudera.sh
+      if [[ $? -eq 0 ]]; then
+        _ks_ok_msg "Cloudera monitoring Bootstrap OK"
+      else 
+        _ks_err_msg "Cloudera monitoring Bootstrap ERROR"
+      fi
+      ;;
+    default)
+      _ks_err_msg "Not Mode defined"
+      ;;
+   esac
+}
+
 # Run a command system for docker-compose management
 function _ks_system_cmd () {
   cd $KS_HOME/docker
@@ -223,11 +250,18 @@ function _ks_system_cmd () {
 # Build and deploy the KS on docker
 function _ks_system_up () {
   _ks_system_cmd up -d
+  _ks_system_bootstrap
 }
 
 # Stop and remove the KS on docker
 function _ks_system_down () {
   _ks_system_cmd down
+}
+
+# Destroy and build the KS on docker
+function _ks_system_reboot () {
+  _ks_system_down
+  _ks_system_up
 }
 
 # Start the KS on docker
@@ -247,7 +281,7 @@ function _ks_system_restart () {
 
 # Print the logs of KS on docker
 function _ks_system_logs () {
-  _ks_system_cmd logs
+  _ks_system_cmd logs $@
 }
 
 # Print the current processes of KS in docker
@@ -272,6 +306,7 @@ function _ks_system_help () {
   System Commands:
     up                       Build and start all the containers for the selected profile
     down                     Stop and destroy all the container for the selected profile
+    reboot                   Destroy and build in one step all the containers for the selected profile
     start                    Start all the containers for the selected profile
     stop                     Stop all the containers for the selected profile
     restart                  Stop and Start all the containers for the selected profile
@@ -294,6 +329,9 @@ function _ks_system_menu () {
     down)
       _ks_system_down
       ;;
+    reboot)
+      _ks_system_reboot
+      ;;
     start)
       _ks_system_start
       ;;
@@ -304,7 +342,7 @@ function _ks_system_menu () {
       _ks_system_restart
       ;;
     logs)
-      _ks_system_logs
+      _ks_system_logs $@
       ;;
     ps)
       _ks_system_ps
@@ -333,7 +371,7 @@ function _ks_system_menu () {
 # Set a deploy mode ( cloudera / dcos / none )
 function _ks_mode_set () {
   local mode=$1
-  _KS_CURRENT_MODE="$mode"
+  _KS_MODE_CURRENT="$mode"
   case "$mode" in
     cloudera)
       _KS_MODULES_FILE=$KS_MODULES_CLOUDERA_FILE
@@ -357,11 +395,11 @@ function _ks_mode_set () {
 # Return a string for the prompt with the current mode
 function _ks_mode_prompt () {
   echo -e "$_KS_MODE_PROMPT_STR"
-}
+} \
 
 # Check if a mode is selected
 function _ks_is_mode_selected () {
-  if [[ $_KS_CURRENT_MODE == "none" ]]; then
+  if [[ $_KS_MODE_CURRENT == "none" ]]; then
     return $_KS_FALSE
   else
     return $_KS_TRUE
@@ -380,7 +418,7 @@ function _ks_mode_list () {
 
 # Print the current mode selected
 function _ks_mode_print_current () {
-  _ks_info_msg "Current mode: \033[31m$(echo $_KS_CURRENT_MODE | awk '{print toupper($0)}')\033[0m"
+  _ks_info_msg "Current mode: \033[31m$(echo $_KS_MODE_CURRENT | awk '{print toupper($0)}')\033[0m"
 }
 
 # Help Message for Mode
