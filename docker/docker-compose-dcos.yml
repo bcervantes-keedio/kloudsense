@@ -73,7 +73,7 @@ services:
 
 
   cp-adapter:
-    image: keedio/ks-cp-adapter:0.1-beta
+    image: keedio/ks-cp-adapter:0.1.1-beta
     restart: on-failure
     container_name: ks-dcos-cp-adapter
     hostname: ks-dcos-cp-adapter
@@ -95,7 +95,7 @@ services:
 
 
   cratedb-ce-node-01:
-    image: keedio/ks-cratedb-ce:0.1-beta
+    image: keedio/ks-cratedb-ce:0.1.1-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-ce-node-01
     hostname: ks-dcos-cratedb-ce-node-01
@@ -116,7 +116,7 @@ services:
 
 
   cratedb-ce-node-02:
-    image: keedio/ks-cratedb-ce:0.1-beta
+    image: keedio/ks-cratedb-ce:0.1.1-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-ce-node-02
     hostname: ks-dcos-cratedb-ce-node-02
@@ -137,7 +137,7 @@ services:
 
 
   cratedb-ce-node-03:
-    image: keedio/ks-cratedb-ce:0.1-beta
+    image: keedio/ks-cratedb-ce:0.1.1-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-ce-node-03
     hostname: ks-dcos-cratedb-ce-node-03
@@ -188,9 +188,6 @@ services:
 #===============================================================================
 volumes:
   prometheus_data:
-  crate_node_01_data:
-  crate_node_02_data:
-  crate_node_03_data:
 
 
 
