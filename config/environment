@@ -217,12 +217,19 @@ function _ks_image_menu () {
 function _ks_system_bootstrap () {
   case "$_KS_MODE_CURRENT" in
     dcos)
+      _ks_info_msg "Running Ansible for Node configuration"
+      ansible-playbook -i dcos/bootstrap/rsyslog/node_configuration/dcos_hosts dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml &>/dev/null
+      if [[ $? -eq 0 ]]; then
+        _ks_ok_msg "DC/OS nodes configured!"
+      else
+        _ks_err_msg "DC/OS nodes configuration failed!"
+      fi
       _ks_info_msg "Launching DC/OS monitoring Bootstrap"
       bash ./dcos/bootstrap/bootstrap_dcos.sh
       if [[ $? -eq 0 ]]; then
-        _ks_ok_msg "DC/OS monitoring Bootstrap OK"
+        _ks_ok_msg "KS-CrateDB Bootstrap OK"
       else 
-        _ks_err_msg "DC/OS monitoring Bootstrap ERROR"
+        _ks_err_msg "KS-CrateDB Bootstrap ERROR"
       fi
       ;;
     cloudera)

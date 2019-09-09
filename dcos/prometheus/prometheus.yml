@@ -1,8 +1,8 @@
 # My Global config
 global:
-  scrape_interval:     20s
-  scrape_timeout:      18s
-  evaluation_interval: 20s
+  scrape_interval:     60s
+  scrape_timeout:      50s
+  evaluation_interval: 60s
 
 
 
