@@ -2,7 +2,7 @@
 global:
   scrape_interval:     120s
   scrape_timeout:      110s
-  evaluation_interval: 120s
+  evaluation_interval: 10s
 
 
 
