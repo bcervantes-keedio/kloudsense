@@ -218,7 +218,8 @@ function _ks_system_bootstrap () {
   case "$_KS_MODE_CURRENT" in
     dcos)
       _ks_info_msg "Running Ansible for Node configuration"
-      ansible-playbook -i dcos/bootstrap/rsyslog/node_configuration/dcos_hosts dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml &>/dev/null
+      ansible-playbook -i dcos/bootstrap/rsyslog/node_configuration/dcos_hosts \
+                          dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml &>/dev/null
       if [[ $? -eq 0 ]]; then
         _ks_ok_msg "DC/OS nodes configured!"
       else
