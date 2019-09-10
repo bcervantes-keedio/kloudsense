@@ -1,0 +1,3 @@
+{
+  "stmt" : "CREATE TABLE syslog.SystemEvents (ID TEXT, CustomerID BIGINT, ReceivedAt TIMESTAMP WITHOUT TIME ZONE, DeviceReportedTime TIMESTAMP WITHOUT TIME ZONE, day__generated TIMESTAMP GENERATED ALWAYS AS date_trunc('day', ReceivedAt), Facility INT, Priority INT, FromHost TEXT, Message TEXT, NTSeverity INT, Importance INT, EventSource TEXT, EventUser TEXT, EventCategory INT, EventID INT, EventBinaryData TEXT, MaxAvailable INT, CurrUsage INT, MinUsage INT, MaxUsage INT, InfoUnitID INT, SysLogTag TEXT, EventLogType TEXT, GenericFileName TEXT, SystemID INT) PARTITIONED BY (day__generated) WITH (number_of_replicas=2)"
+}

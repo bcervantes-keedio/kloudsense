@@ -16,7 +16,30 @@ done
 
 curl -sS -H 'Content-Type: application/json' \
     -X POST "$CRATE_ENDPOINT:$CRATE_PORT/_sql" \
-    -d @./dcos/bootstrap/cratedb_prometheus_metrics_table_query.json \
+    -d @./dcos/bootstrap/cratedb/tables/cratedb_prometheus_metrics_table_query.json \
     -o /dev/null
+[[ $? -ne 0 ]] && { exit 1; }
 
-[[ $? -eq 0 ]] && { exit 0; } || { exit 1; }
+
+
+curl -sS -H 'Content-Type: application/json' \
+    -X POST "$CRATE_ENDPOINT:$CRATE_PORT/_sql" \
+    -d @./dcos/bootstrap/cratedb/tables/cratedb_syslog_system_messages_table_query.json \
+    -o /dev/null
+[[ $? -ne 0 ]] && { exit 1; }
+
+
+
+curl -sS -H 'Content-Type: application/json' \
+    -X POST "$CRATE_ENDPOINT:$CRATE_PORT/_sql" \
+    -d @./dcos/bootstrap/cratedb/tables/cratedb_syslog_system_messages_properties_table_query.json \
+    -o /dev/null
+[[ $? -ne 0 ]] && { exit 1; }
+
+
+
+curl -sS -H 'Content-Type: application/json' \
+    -X POST "$CRATE_ENDPOINT:$CRATE_PORT/_sql" \
+    -d @./dcos/bootstrap/cratedb/tables/cratedb_dcos_container_logs_table_query.json \
+    -o /dev/null
+[[ $? -ne 0 ]] && { exit 1; }

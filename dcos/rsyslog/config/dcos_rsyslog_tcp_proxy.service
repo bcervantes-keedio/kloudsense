@@ -1,0 +1,11 @@
+[Unit]
+Description=DC/OS containers logs proxy by TCP to Rsyslog
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/kloudsense/scripts/dcos_rsyslog_tcp_proxy.py -v
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
