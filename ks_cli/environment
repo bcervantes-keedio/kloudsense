@@ -12,15 +12,14 @@
 KS_HOME="$( cd "$(dirname "$0")" ; pwd -P )"
 
 # Private Variables
-_KS_TRUE=1
-_KS_FALSE=0
-_KS_OK_CODE=0
-_KS_ERR_CODE=1
-_KS_MODE_CURRENT="none"
-_KS_MODULES_FILE=""
-_KS_MODE_DOCKERCOMPOSE_FILE=""
-_KS_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
-_KS_MODE_DOCKERCOMPOSE_FILE=""
+_KS_CLI_TRUE=1
+_KS_CLI_FALSE=0
+_KS_CLI_MODE_CURRENT="none"
+_KS_CLI_MODULES_FILE=""
+_KS_CLI_MODE_DOCKERCOMPOSE_FILE=""
+_KS_CLI_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+_KS_CLI_VERSION="$(cat $KS_HOME/VERSION)"
+_KS_CLI_IMAGE_PREFIX="ks-"
 
 
 
@@ -81,21 +80,20 @@ unset _OS
 function _ks_get_dockerfile_image_name () {
   local version="$(sed -n 's/LABEL version=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
   local vendor="$(sed -n 's/LABEL vendor=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
-  local image_name="$KS_IMAGE_PREFIX$(sed -n 's/LABEL image_name=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
+  local image_name="$_KS_IMAGE_PREFIX$(sed -n 's/LABEL image_name=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
   echo "$vendor/$image_name:$version"
 }
 
 # Clean all KS docker images
 function _ks_image_clean () {
   _ks_info_msg "Cleanning KS Images..."
-  # docker images -a | grep "$KS_IMAGE_PREFIX" | awk '{ print $3 }' | xargs --no-run-if-empty docker rmi -f 1>/dev/null
-  docker images -a | grep "$KS_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
+  docker images -a | grep "$_KS_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
   [[ $? -eq 0 ]] && { _ks_ok_msg "Cleanning KS Images Success"; } || { _ks_err_msg "Cleanning KS Images Error"; }
 }
 
 # Print all the KS images
 function _ks_image_list () {
-  docker images | grep "$KS_IMAGE_PREFIX" | awk '{ print "\033[37m[\033[34m*\033[37m] \033[31mImage Name:\t\033[33m"$1":"$2"\033[0m" }'
+  docker images | grep "$_KS_IMAGE_PREFIX" | awk '{ print "\033[37m[\033[34m*\033[37m] \033[31mImage Name:\t\033[33m"$1":"$2"\033[0m" }'
 }
 
 # Launch export process and compress All the exported docker images on a Tar File
@@ -215,7 +213,7 @@ function _ks_image_menu () {
 
 # Run the cluster init config to deploy
 function _ks_system_bootstrap () {
-  case "$_KS_MODE_CURRENT" in
+  case "$_KS_CLI_MODE_CURRENT" in
     dcos)
       _ks_info_msg "Running Ansible for Node configuration"
       ansible-playbook -i dcos/bootstrap/rsyslog/node_configuration/dcos_hosts \
@@ -251,7 +249,7 @@ function _ks_system_bootstrap () {
 # Run a command system for docker-compose management
 function _ks_system_cmd () {
   cd $KS_HOME/docker
-  docker-compose -f $_KS_MODE_DOCKERCOMPOSE_FILE $@
+  docker-compose -f $_KS_CLI_MODE_DOCKERCOMPOSE_FILE $@
   cd $KS_HOME
 }
 
@@ -300,7 +298,7 @@ function _ks_system_ps () {
 # Print the status of KS in docker
 function _ks_system_status () {
   local status="$(_ks_system_cmd ps)"
-  local n_services=$(echo "$status" | grep -e "^$KS_IMAGE_PREFIX" | wc -l)
+  local n_services=$(echo "$status" | grep -e "^$_KS_IMAGE_PREFIX" | wc -l)
   local n_up_status=$(echo "$status" | grep -e "Up" | wc -l)
   
   [[ $n_services -eq 0 ]] && { _ks_war_msg "KloudSense is \033[33mSTOPPED\033[0m"; return; }
@@ -329,7 +327,7 @@ function _ks_system_menu () {
   local cmd=$1
   shift
   _ks_is_mode_selected
-  [[ $? -eq $_KS_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
+  [[ $? -eq $_KS_CLI_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
   case "$cmd" in
     up)
       _ks_system_up
@@ -379,22 +377,22 @@ function _ks_system_menu () {
 # Set a deploy mode ( cloudera / dcos / none )
 function _ks_mode_set () {
   local mode=$1
-  _KS_MODE_CURRENT="$mode"
+  _KS_CLI_MODE_CURRENT="$mode"
   case "$mode" in
     cloudera)
-      _KS_MODULES_FILE=$KS_MODULES_CLOUDERA_FILE
-      _KS_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_CLOUDERA_FILE
-      _KS_MODE_PROMPT_STR="\033[31m[CLOUDERA]\033[0m"
+      _KS_CLI_MODULES_FILE=$KS_MODULES_CLOUDERA_FILE
+      _KS_CLI_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_CLOUDERA_FILE
+      _KS_CLI_MODE_PROMPT_STR="\033[31m[CLOUDERA]\033[0m"
       ;;
     dcos)
-      _KS_MODULES_FILE=$KS_MODULES_DCOS_FILE
-      _KS_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_DCOS_FILE
-      _KS_MODE_PROMPT_STR="\033[31m[DC/OS]\033[0m"
+      _KS_CLI_MODULES_FILE=$KS_MODULES_DCOS_FILE
+      _KS_CLI_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_DCOS_FILE
+      _KS_CLI_MODE_PROMPT_STR="\033[31m[DC/OS]\033[0m"
       ;;
     none)
-      _KS_MODULES_FILE=""
-      _KS_MODE_DOCKERCOMPOSE_FILE=""
-      _KS_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+      _KS_CLI_MODULES_FILE=""
+      _KS_CLI_MODE_DOCKERCOMPOSE_FILE=""
+      _KS_CLI_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
       ;;
   esac
   _ks_info_msg "Mode set to: $mode"
@@ -402,15 +400,15 @@ function _ks_mode_set () {
 
 # Return a string for the prompt with the current mode
 function _ks_mode_prompt () {
-  echo -e "$_KS_MODE_PROMPT_STR"
+  echo -e "$_KS_CLI_MODE_PROMPT_STR"
 } \
 
 # Check if a mode is selected
 function _ks_is_mode_selected () {
-  if [[ $_KS_MODE_CURRENT == "none" ]]; then
-    return $_KS_FALSE
+  if [[ $_KS_CLI_MODE_CURRENT == "none" ]]; then
+    return $_KS_CLI_FALSE
   else
-    return $_KS_TRUE
+    return $_KS_CLI_TRUE
   fi
 }
 
@@ -426,7 +424,7 @@ function _ks_mode_list () {
 
 # Print the current mode selected
 function _ks_mode_print_current () {
-  _ks_info_msg "Current mode: \033[31m$(echo $_KS_MODE_CURRENT | awk '{print toupper($0)}')\033[0m"
+  _ks_info_msg "Current mode: \033[31m$(echo $_KS_CLI_MODE_CURRENT | awk '{print toupper($0)}')\033[0m"
 }
 
 # Help Message for Mode
@@ -499,19 +497,19 @@ function _ks_get_module_name () {
 # Aux function to check if a docker image exists locally
 function _ks_check_if_image_exists () {
   if [[ "$(docker images -q $1 2> /dev/null)" == "" ]]; then
-    return $_KS_FALSE
+    return $_KS_CLI_FALSE
   else
-    return $_KS_TRUE
+    return $_KS_CLI_TRUE
   fi
 }
 
 # Aux function to return a string with the state of the module
 function _ks_return_module_present_string () {
-  [[ -z $1 ]] && { return $_KS_FALSE; }
+  [[ -z $1 ]] && { return $_KS_CLI_FALSE; }
   local retval=0
   _ks_check_if_image_exists keedio/$1
   retval=$?
-  if [[ $retval -eq $_KS_TRUE ]]; then
+  if [[ $retval -eq $_KS_CLI_TRUE ]]; then
     echo -e "\033[37m[\033[32mpresent\033[37m]\033[0m"
   else
     echo -e "\033[37m[\033[31mabsent\033[37m]\033[0m"
@@ -523,20 +521,20 @@ function _ks_check_if_repo_is_pulled () {
   local repo_name=$1
   if [[ -d $KS_MODULES_DOWNLOAD_DIR ]]; then
     if [[ -d $KS_MODULES_DOWNLOAD_DIR$repo_name ]]; then
-      return $_KS_TRUE
+      return $_KS_CLI_TRUE
     else
-      return $_KS_FALSE
+      return $_KS_CLI_FALSE
     fi
   fi
 }
 
 # Aux function to return a string with the pull info of the module
 function _ks_return_module_pulled_string () {
-  [[ -z $1 ]] && { return $_KS_FALSE; }
+  [[ -z $1 ]] && { return $_KS_CLI_FALSE; }
   local retval=0
   _ks_check_if_repo_is_pulled $1
   retval=$?
-  if [[ $retval -eq $_KS_TRUE ]]; then
+  if [[ $retval -eq $_KS_CLI_TRUE ]]; then
     echo -e "\033[37m[\033[32mpulled\033[37m]\033[0m"
   else
     echo -e "\033[37m[\033[31mnot-pulled\033[37m]\033[0m"
@@ -549,16 +547,16 @@ function _ks_module_list_modules () {
     version="$(_ks_get_module_version $line)"
     name="$(_ks_get_module_name $line)"
     _ks_info_msg "\033[31mModule Name:\033[033m $name:$version\r\033[80C$(_ks_return_module_present_string $name:$version) $(_ks_return_module_pulled_string $name)"
-  done < $_KS_MODULES_FILE
+  done < $_KS_CLI_MODULES_FILE
 }
 
 # Pull module
 function _ks_module_pull_module () {
-  [[ -z $1 ]] && { return $_KS_FALSE; }
+  [[ -z $1 ]] && { return $_KS_CLI_FALSE; }
   local repo_url=$1
   local repo_dir=$2
   git clone $repo_url $repo_dir
-  return $_KS_TRUE  
+  return $_KS_CLI_TRUE  
 }
 
 # Pull modules
@@ -568,7 +566,7 @@ function _ks_module_pull_modules () {
     name="$(_ks_get_module_name $line)"
     _ks_info_msg "\033[31mPulling Module:\033[033m $url"
     _ks_module_pull_module $url $KS_MODULES_DOWNLOAD_DIR$name
-  done < $_KS_MODULES_FILE
+  done < $_KS_CLI_MODULES_FILE
 }
 
 # Clean pulled modules
@@ -589,12 +587,12 @@ function _ks_module_build_module () {
     cd - &>/dev/null
     if [[ $retval -ne 0 ]]; then
       echo $output
-      return $_KS_FALSE
+      return $_KS_CLI_FALSE
     fi
   else
     _ks_err_msg "The module $name is not pulled. Try pulling the modules first"
   fi
-  return $_KS_TRUE  
+  return $_KS_CLI_TRUE  
 }
 
 # Build modules
@@ -604,7 +602,7 @@ function _ks_module_build_modules () {
     local version="$(_ks_get_module_version $line)"
     _ks_info_msg "\033[31mBuilding Module:\033[033m $name:$version"
     _ks_module_build_module $name $version
-  done < $_KS_MODULES_FILE
+  done < $_KS_CLI_MODULES_FILE
 }
 
 # Help Message for Module module
@@ -625,7 +623,7 @@ function _ks_module_menu () {
   local cmd=$1
   shift
   _ks_is_mode_selected
-  [[ $? -eq $_KS_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
+  [[ $? -eq $_KS_CLI_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
   case "$cmd" in
     list)
       _ks_module_list_modules
@@ -662,9 +660,9 @@ function _ks_welcome () {
   printf "\033[34m \n\
 ################################################################################\n\
 Keedio's \033[36mKloudSense\033[34m command line interface:\n\
-Version: \033[36m$KS_VERSION\033[34m\n\
+  Version: \033[36m$(_ks_print_version)\033[34m\n\
 \n\
-$(cat config/logo.txt)
+$(cat $KS_CLI_LOGO_PATH)
 \n\
 \033[37mTo get the help message type:  \033[1;33mks help\033[0;34m\n\
 ################################################################################\n\
@@ -673,7 +671,7 @@ $(cat config/logo.txt)
 
 # Print Current Version
 function _ks_print_version () {
-  echo "$KS_VERSION"
+  echo "$_KS_CLI_VERSION"
 }
 
 # KS command usage function
