@@ -30,7 +30,6 @@ services:
         target: /etc/grafana/grafana.ini
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=frontend"
 
 
 
@@ -67,7 +66,6 @@ services:
         target: /prometheus
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=short term storage"
 
 
 
@@ -91,14 +89,13 @@ services:
         target: /config.yml
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=CrateDB-Prometheus Adapter"
 
 
-  cratedb-ce-node-01:
-    image: keedio/ks-cratedb-ce:0.1.1-beta
+  cratedb-ce-node-001:
+    image: keedio/ks-cratedb-ce:0.1.2-beta
     restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-01
-    hostname: ks-dcos-cratedb-ce-node-01
+    container_name: ks-dcos-cratedb-ce-node-001
+    hostname: ks-dcos-cratedb-ce-node-001
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.6.1
@@ -113,14 +110,13 @@ services:
         target: /crate-ce/config/crate.yml
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=long term storage"
 
 
-  cratedb-ce-node-02:
-    image: keedio/ks-cratedb-ce:0.1.1-beta
+  cratedb-ce-node-002:
+    image: keedio/ks-cratedb-ce:0.1.2-beta
     restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-02
-    hostname: ks-dcos-cratedb-ce-node-02
+    container_name: ks-dcos-cratedb-ce-node-002
+    hostname: ks-dcos-cratedb-ce-node-002
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.6.2
@@ -134,14 +130,13 @@ services:
         target: /crate-ce/config/crate.yml
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=long term storage"
 
 
-  cratedb-ce-node-03:
-    image: keedio/ks-cratedb-ce:0.1.1-beta
+  cratedb-ce-node-003:
+    image: keedio/ks-cratedb-ce:0.1.2-beta
     restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-03
-    hostname: ks-dcos-cratedb-ce-node-03
+    container_name: ks-dcos-cratedb-ce-node-003
+    hostname: ks-dcos-cratedb-ce-node-003
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.6.3
@@ -155,7 +150,6 @@ services:
         target: /crate-ce/config/crate.yml
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=long term storage"
 
 
   alertmanager:
@@ -178,8 +172,215 @@ services:
         target: /etc/alertmanager/alertmanager.yml
     labels:
       - "kloudsense.mode=DCOS"
-      - "kloudsense.type=alert management"
 
+
+  airflow-redis:
+    image: redis:3.2.7
+    restart: on-failure
+    container_name: ks-dcos-airflow-redis
+    hostname: ks-dcos-airflow-redis
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.1
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  airflow-postgres:
+    image: postgres:9.6
+    restart: on-failure
+    container_name: ks-dcos-airflow-postgres
+    hostname: ks-dcos-airflow-postgres
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.2
+    environment:
+        - POSTGRES_USER=airflow
+        - POSTGRES_PASSWORD=airflow
+        - POSTGRES_DB=airflow
+        - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - type: volume
+        source: airflow_pgsql_data
+        target: /var/lib/postgresql/data/pgdata
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  airflow-webserver:
+    image: keedio/ks-airflow:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-airflow-webserver
+    hostname: ks-dcos-airflow-webserver
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.3
+    depends_on:
+      - airflow-postgres
+      - airflow-redis
+    ports:
+      - "8083:8080"
+    extra_hosts:
+      - "postgres:172.16.7.2"
+      - "redis:172.16.7.1"
+    environment:
+      - LOAD_EX=n
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      # - POSTGRES_USER=airflow
+      # - POSTGRES_PASSWORD=airflow
+      # - POSTGRES_DB=airflow
+      # - REDIS_PASSWORD=redispass
+    volumes:
+      - /tmp/dags:/usr/local/airflow/dags
+      # Uncomment to include custom plugins
+      # - ./plugins:/usr/local/airflow/plugins
+    command: webserver
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    labels:
+      - "kloudsense.mode=DCOS"
+
+  airflow-flower:
+    image: keedio/ks-airflow:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-airflow-flower
+    hostname: ks-dcos-airflow-flower
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.4
+    depends_on:
+      - airflow-redis
+    extra_hosts:
+      - "postgres:172.16.7.2"
+      - "redis:172.16.7.1"
+    environment:
+      - EXECUTOR=Celery
+      # - REDIS_PASSWORD=redispass
+    ports:
+      - "5555:5555"
+    command: flower
+    labels:
+      - "kloudsense.mode=DCOS"
+
+  airflow-scheduler:
+    image: keedio/ks-airflow:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-airflow-scheduler
+    hostname: ks-dcos-airflow-scheduler
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.5
+    depends_on:
+      - airflow-webserver
+    extra_hosts:
+      - "postgres:172.16.7.2"
+      - "redis:172.16.7.1"
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+      # Uncomment to include custom plugins
+      # - ./plugins:/usr/local/airflow/plugins
+    environment:
+      - LOAD_EX=n
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      # - POSTGRES_USER=airflow
+      # - POSTGRES_PASSWORD=airflow
+      # - POSTGRES_DB=airflow
+      # - REDIS_PASSWORD=redispass
+    command: scheduler
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  airflow-worker-001:
+    image: keedio/ks-airflow:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-airflow-worker-001
+    hostname: ks-dcos-airflow-worker-001
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.100
+    depends_on:
+      - airflow-scheduler
+    extra_hosts:
+      - "postgres:172.16.7.2"
+      - "redis:172.16.7.1"
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+      # Uncomment to include custom plugins
+      # - ./plugins:/usr/local/airflow/plugins
+    environment:
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      # - POSTGRES_USER=airflow
+      # - POSTGRES_PASSWORD=airflow
+      # - POSTGRES_DB=airflow
+      # - REDIS_PASSWORD=redispass
+    command: worker
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  airflow-worker-002:
+    image: keedio/ks-airflow:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-airflow-worker-002
+    hostname: ks-dcos-airflow-worker-002
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.101
+    depends_on:
+      - airflow-scheduler
+    extra_hosts:
+      - "postgres:172.16.7.2"
+      - "redis:172.16.7.1"
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+      # Uncomment to include custom plugins
+      # - ./plugins:/usr/local/airflow/plugins
+    environment:
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      # - POSTGRES_USER=airflow
+      # - POSTGRES_PASSWORD=airflow
+      # - POSTGRES_DB=airflow
+      # - REDIS_PASSWORD=redispass
+    command: worker
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  airflow-worker-003:
+    image: keedio/ks-airflow:0.1-beta
+    restart: on-failure
+    container_name: ks-dcos-airflow-worker-003
+    hostname: ks-dcos-airflow-worker-003
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.7.102
+    depends_on:
+      - airflow-scheduler
+    extra_hosts:
+      - "postgres:172.16.7.2"
+      - "redis:172.16.7.1"
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+      # Uncomment to include custom plugins
+      # - ./plugins:/usr/local/airflow/plugins
+    environment:
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      # - POSTGRES_USER=airflow
+      # - POSTGRES_PASSWORD=airflow
+      # - POSTGRES_DB=airflow
+      # - REDIS_PASSWORD=redispass
+    command: worker
+    labels:
+      - "kloudsense.mode=DCOS"
 
 
 
@@ -189,6 +390,7 @@ services:
 #===============================================================================
 volumes:
   prometheus_data:
+  airflow_pgsql_data:
 
 
 
@@ -219,3 +421,5 @@ networks:
           # CrateDB:
           #     172.16.6.XXX
           #
+          # Airflow:
+          #     172.16.7.XXX
