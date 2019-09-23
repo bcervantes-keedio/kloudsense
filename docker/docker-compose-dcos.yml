@@ -232,7 +232,7 @@ services:
       # - POSTGRES_DB=airflow
       # - REDIS_PASSWORD=redispass
     volumes:
-      - /tmp/dags:/usr/local/airflow/dags
+      - ../dcos/dags:/usr/local/airflow/dags
       # Uncomment to include custom plugins
       # - ./plugins:/usr/local/airflow/plugins
     command: webserver
