@@ -280,7 +280,7 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ./dags:/usr/local/airflow/dags
+      - ../dcos/dags:/usr/local/airflow/dags
       # Uncomment to include custom plugins
       # - ./plugins:/usr/local/airflow/plugins
     environment:
@@ -310,7 +310,7 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ./dags:/usr/local/airflow/dags
+      - ../dcos/dags:/usr/local/airflow/dags
       # Uncomment to include custom plugins
       # - ./plugins:/usr/local/airflow/plugins
     environment:
@@ -339,7 +339,7 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ./dags:/usr/local/airflow/dags
+      - ../dcos/dags:/usr/local/airflow/dags
       # Uncomment to include custom plugins
       # - ./plugins:/usr/local/airflow/plugins
     environment:
@@ -368,7 +368,7 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ./dags:/usr/local/airflow/dags
+      - ../dcos/dags:/usr/local/airflow/dags
       # Uncomment to include custom plugins
       # - ./plugins:/usr/local/airflow/plugins
     environment:
