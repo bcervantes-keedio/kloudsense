@@ -172,6 +172,8 @@ function _ks_image_menu () {
 
 # Run the cluster init config to deploy
 function _ks_system_bootstrap () {
+  _ks_yesno "Do you want to launch bootstrap?[y/n] "
+  [[ $? -eq $_KS_CLI_TRUE ]] && { _ks_info_msg "Launching Bootstrap"; } || { return $_KS_CLI_FALSE; }
   case "$_KS_CLI_MODE_CURRENT" in
     dcos)
       _ks_info_msg "Running Ansible for Node configuration"
@@ -273,6 +275,7 @@ function _ks_system_help () {
     down                     Stop and destroy all the container for the selected profile
     reboot                   Destroy and build in one step all the containers for the selected profile
     start                    Start all the containers for the selected profile
+    bootstrap                Launch the Bootstrap process
     stop                     Stop all the containers for the selected profile
     restart                  Stop and Start all the containers for the selected profile
     logs                     Print by stdout the logs of all the containers for the selected profile
@@ -299,6 +302,9 @@ function _ks_system_menu () {
       ;;
     start)
       _ks_system_start
+      ;;
+    bootstrap)
+      _ks_system_bootstrap
       ;;
     stop)
       _ks_system_stop

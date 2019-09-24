@@ -45,3 +45,17 @@ function _ks_ok_msg () {
 function _ks_info_msg () {                    
   echo -e "\033[37m[\033[34m*\033[37m]\033[0m $@"
 }
+
+
+
+
+function _ks_yesno () {
+  local msg=$1
+  read -p "$msg" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    return $_KS_CLI_TRUE
+  else
+    return $_KS_CLI_FALSE
+  fi
+}
