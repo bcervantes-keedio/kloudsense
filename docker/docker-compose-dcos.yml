@@ -28,10 +28,13 @@ services:
       - type: bind
         source: ../dcos/grafana/grafana.ini
         target: /etc/grafana/grafana.ini
+    healthcheck:
+      test: ["CMD-SHELL", "curl -XGET http://localhost:3000/api/health | grep '\"database\": \"ok\"'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
-
-
 
 
   prometheus:
@@ -50,7 +53,8 @@ services:
       - "prometheus:172.16.2.1"
       - "grafana:172.16.1.1"
       - "alertmanager:172.16.4.1"
-      - "cp-adapter:172.16.2.2"
+      - "cp-adapter-read:172.16.2.2"
+      - "cp-adapter-write:172.16.2.3"
     volumes:
       - type: bind
         source: ../dcos/system/resolv.conf
@@ -64,17 +68,20 @@ services:
       - type: volume
         source: prometheus_data
         target: /prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "[[ \"$$(wget -q -O - http://localhost:9090/-/healthy)\" == \"Prometheus is Healthy.\" ]]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
 
-
-
-  cp-adapter:
+  cp-adapter-read:
     image: keedio/ks-cp-adapter:0.1.1-beta
     restart: on-failure
-    container_name: ks-dcos-cp-adapter
-    hostname: ks-dcos-cp-adapter
+    container_name: ks-dcos-cp-adapter-read
+    hostname: ks-dcos-cp-adapter-read
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.2.2
@@ -82,11 +89,59 @@ services:
       - prometheus
     extra_hosts:
       - "prometheus:172.16.2.1"
-      - "cratedb-endpoint:172.16.6.1"
+      - "cratedb-endpoint:172.16.6.0"
     volumes:
       - type: bind
-        source: ../dcos/cp-adapter/config.yml
+        source: ../dcos/cp-adapter-read/config.yml
         target: /config.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  cp-adapter-write:
+    image: keedio/ks-cp-adapter:0.1.1-beta
+    restart: on-failure
+    container_name: ks-dcos-cp-adapte-writer
+    hostname: ks-dcos-cp-adapte-writer
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.2.3
+    depends_on:
+      - prometheus
+    extra_hosts:
+      - "prometheus:172.16.2.1"
+      - "cratedb-endpoint:172.16.6.0"
+    volumes:
+      - type: bind
+        source: ../dcos/cp-adapter-write/config.yml
+        target: /config.yml
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  cratedb-ce-node-load-balancer:
+    image: keedio/ks-cratedb-ce:0.1.2-beta
+    restart: on-failure
+    container_name: ks-dcos-cratedb-ce-node-load-balancer
+    hostname: ks-dcos-cratedb-ce-node-load-balancer
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.6.0
+    depends_on:
+      - cp-adapter-read
+      - cp-adapter-write
+    ports:
+      - "4200:4200"
+      - "5432:5432"
+    volumes:
+      - type: bind
+        source: ../dcos/cratedb/node-load-balancer/crate.yml
+        target: /crate-ce/config/crate.yml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -100,14 +155,18 @@ services:
       ks_dcos_net:
         ipv4_address: 172.16.6.1
     depends_on:
-      - cp-adapter
+      - cratedb-ce-node-load-balancer
     ports:
-      - "4200:4200"
-      - "5432:5432"
+      - "4201:4200"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-01/crate.yml
+        source: ../dcos/cratedb/node-001/crate.yml
         target: /crate-ce/config/crate.yml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -121,13 +180,18 @@ services:
       ks_dcos_net:
         ipv4_address: 172.16.6.2
     depends_on:
-      - cp-adapter
+      - cratedb-ce-node-load-balancer
     ports:
-      - "4201:4200"
+      - "4202:4200"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-02/crate.yml
+        source: ../dcos/cratedb/node-002/crate.yml
         target: /crate-ce/config/crate.yml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -141,13 +205,18 @@ services:
       ks_dcos_net:
         ipv4_address: 172.16.6.3
     depends_on:
-      - cp-adapter
+      - cratedb-ce-node-load-balancer
     ports:
-      - "4202:4200"
+      - "4203:4200"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-03/crate.yml
+        source: ../dcos/cratedb/node-003/crate.yml
         target: /crate-ce/config/crate.yml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -170,6 +239,11 @@ services:
       - type: bind
         source: ../dcos/alertmanager/alertmanager.yml
         target: /etc/alertmanager/alertmanager.yml
+    healthcheck:
+      test: ["CMD-SHELL", "[[ \"$$(wget -q -O - http://localhost:9093/-/healthy)\" == \"OK\" ]]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -182,6 +256,11 @@ services:
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.7.1
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 3añdsfñasdfñasdflasdfkasdjf adsñfasdjfkjkkllkjdlasfalsdfasdfladslf834102ilfasdklghaivhcvbkldFHA gu0s
+      timeout: 10s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -203,6 +282,11 @@ services:
       - type: volume
         source: airflow_pgsql_data
         target: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -263,6 +347,11 @@ services:
     ports:
       - "5555:5555"
     command: flower
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:5555 || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
