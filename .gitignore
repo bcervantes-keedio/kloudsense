@@ -2,3 +2,4 @@
 *.swp
 .modules_download_dir
 docker/docker_images
+*.retry
