@@ -20,22 +20,22 @@ rule_files:
 
 scrape_configs:
   # Prometheus
-  - job_name: 'DCOS-Prometheus'
+  - job_name: 'DC/OS-Prometheus'
     static_configs:
     - targets: ['prometheus:9090']
 
   # Grafana
-  - job_name: 'DCOS-Grafana'
+  - job_name: 'DC/OS-Grafana'
     static_configs:
     - targets: ['grafana:3000']
 
   # Alertmanager
-  - job_name: 'DCOS-Alertmanager'
+  - job_name: 'DC/OS-Alertmanager'
     static_configs:
     - targets: ['alertmanager:9093']
 
   # DC/OS Cluster
-  - job_name: dcos-metrics
+  - job_name: 'DC/OS-Metrics'
     metrics_path: /metrics
     scheme: http
     dns_sd_configs:
@@ -46,8 +46,8 @@ scrape_configs:
       type: A
       port: 61091
 
-remote_write:
-   - url: http://cp-adapter:9268/write
 remote_read:
-   - url: http://cp-adapter:9268/read
+   - url: http://cp-adapter-read:9268/read
 
+remote_write:
+   - url: http://cp-adapter-write:9268/write

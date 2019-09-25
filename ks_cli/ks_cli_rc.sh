@@ -39,20 +39,20 @@ unset _OS
 function _ks_get_dockerfile_image_name () {
   local version="$(sed -n 's/LABEL version=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
   local vendor="$(sed -n 's/LABEL vendor=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
-  local image_name="$_KS_IMAGE_PREFIX$(sed -n 's/LABEL image_name=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
+  local image_name="$_KS_CLI_IMAGE_PREFIX$(sed -n 's/LABEL image_name=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
   echo "$vendor/$image_name:$version"
 }
 
 # Clean all KS docker images
 function _ks_image_clean () {
   _ks_info_msg "Cleanning KS Images..."
-  docker images -a | grep "$_KS_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
+  docker images -a | grep "$_KS_CLI_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
   [[ $? -eq 0 ]] && { _ks_ok_msg "Cleanning KS Images Success"; } || { _ks_err_msg "Cleanning KS Images Error"; }
 }
 
 # Print all the KS images
 function _ks_image_list () {
-  docker images | grep "$_KS_IMAGE_PREFIX" | awk '{ print "\033[37m[\033[34m*\033[37m] \033[31mImage Name:\t\033[33m"$1":"$2"\033[0m" }'
+  docker images | grep "$_KS_CLI_IMAGE_PREFIX" | awk '{ print "\033[37m[\033[34m*\033[37m] \033[31mImage Name:\t\033[33m"$1":"$2"\033[0m" }'
 }
 
 # Launch export process and compress All the exported docker images on a Tar File
@@ -172,10 +172,19 @@ function _ks_image_menu () {
 
 # Run the cluster init config to deploy
 function _ks_system_bootstrap () {
+  _ks_is_mode_selected
+  [[ $? -eq $_KS_CLI_FALSE ]] && { _ks_err_msg "No mode selected! Type 'ks mode help' for help"; return; }
+
+  _ks_yesno "Do you want to launch bootstrap?[y/n] "
+  [[ $? -eq $_KS_CLI_TRUE ]] && { _ks_info_msg "Launching Bootstrap"; } || { return $_KS_CLI_FALSE; }
+
+  [[ -f $_KS_CLI_INVENTORY ]] || { _ks_err_msg "Inventory file not found. Abort."; return $_KS_CLI_FALSE; }
+
   case "$_KS_CLI_MODE_CURRENT" in
     dcos)
       _ks_info_msg "Running Ansible for Node configuration"
-      ansible-playbook -i dcos/bootstrap/rsyslog/node_configuration/dcos_hosts \
+
+      ansible-playbook -i $_KS_CLI_INVENTORY \
                           dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml &>/dev/null
       if [[ $? -eq 0 ]]; then
         _ks_ok_msg "DC/OS nodes configured!"
@@ -207,9 +216,7 @@ function _ks_system_bootstrap () {
 
 # Run a command system for docker-compose management
 function _ks_system_cmd () {
-  cd $KS_HOME/docker
   docker-compose -f $_KS_CLI_MODE_DOCKERCOMPOSE_FILE $@
-  cd $KS_HOME
 }
 
 # Build and deploy the KS on docker
@@ -256,12 +263,25 @@ function _ks_system_ps () {
 
 # Print the status of KS in docker
 function _ks_system_status () {
-  local status="$(_ks_system_cmd ps)"
-  local n_services=$(echo "$status" | grep -e "^$_KS_IMAGE_PREFIX" | wc -l)
-  local n_up_status=$(echo "$status" | grep -e "Up" | wc -l)
+  local status="$(_ks_system_ps)"
+  local n_services=$(echo "$status" | grep -e "^$_KS_CLI_IMAGE_PREFIX" | wc -l | tr -d '[:space:]')
+  local n_up_status=$(echo "$status" | grep -e "Up" | wc -l | tr -d '[:space:]')
   
-  [[ $n_services -eq 0 ]] && { _ks_war_msg "KloudSense is \033[33mSTOPPED\033[0m"; return; }
+  # No services running
+  [[ $n_services -eq "0" ]] && { _ks_war_msg "KloudSense is \033[33mSTOPPED\033[0m"; return; }
+
+  # Not all services are Up
   [[ $n_services -eq $n_up_status ]] && { _ks_ok_msg "KloudSense is \033[32mUP\033[0m"; } || {  _ks_err_msg "KloudSense is \033[31mERROR\033[0m"; }
+}
+
+# Print the current configuration for KS system
+function _ks_system_config () {
+  printf "KloudSense System current configuration\n
+  \033[31mMode:\033[33m         $_KS_CLI_MODE_CURRENT
+  \033[31mDeploy:\033[33m       $KS_CONFIG_DEPLOY
+  \033[31mEnvironment:\033[33m  $KS_CONFIG_ENVIRONMENT
+  \033[31mVersion:\033[33m      $_KS_CLI_VERSION
+  \n"
 }
 
 # Help Message for System
@@ -273,10 +293,12 @@ function _ks_system_help () {
     down                     Stop and destroy all the container for the selected profile
     reboot                   Destroy and build in one step all the containers for the selected profile
     start                    Start all the containers for the selected profile
+    bootstrap                Launch the Bootstrap process
     stop                     Stop all the containers for the selected profile
     restart                  Stop and Start all the containers for the selected profile
     logs                     Print by stdout the logs of all the containers for the selected profile
     status                   Print the status of all the containers for the selected profile
+    config                   Print the current configuration for KS system
     help                     Print this message
 \n"
 }
@@ -300,6 +322,9 @@ function _ks_system_menu () {
     start)
       _ks_system_start
       ;;
+    bootstrap)
+      _ks_system_bootstrap
+      ;;
     stop)
       _ks_system_stop
       ;;
@@ -314,6 +339,9 @@ function _ks_system_menu () {
       ;;
     status)
       _ks_system_status
+      ;;
+    config)
+      _ks_system_config
       ;;
     help)
       _ks_system_help
@@ -342,16 +370,19 @@ function _ks_mode_set () {
       _KS_CLI_MODULES_FILE=$KS_MODULES_CLOUDERA_FILE
       _KS_CLI_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_CLOUDERA_FILE
       _KS_CLI_MODE_PROMPT_STR="\033[31m[CLOUDERA]\033[0m"
+      _KS_CLI_INVENTORY=$KS_CLOUDERA_INVENTORY_FILE
       ;;
     dcos)
       _KS_CLI_MODULES_FILE=$KS_MODULES_DCOS_FILE
       _KS_CLI_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_DCOS_FILE
       _KS_CLI_MODE_PROMPT_STR="\033[31m[DC/OS]\033[0m"
+      _KS_CLI_INVENTORY=$KS_DCOS_INVENTORY_FILE
       ;;
     none)
       _KS_CLI_MODULES_FILE=""
       _KS_CLI_MODE_DOCKERCOMPOSE_FILE=""
       _KS_CLI_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+      _KS_CLI_INVENTORY=""
       ;;
   esac
   _ks_info_msg "Mode set to: $mode"
