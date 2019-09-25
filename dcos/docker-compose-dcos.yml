@@ -258,7 +258,7 @@ services:
         ipv4_address: 172.16.7.1
     healthcheck:
       test: ["CMD", "redis-cli","ping"]
-      interval: 3añdsfñasdfñasdflasdfkasdjf adsñfasdjfkjkkllkjdlasfalsdfasdfladslf834102ilfasdklghaivhcvbkldFHA gu0s
+      interval: 30s
       timeout: 10s
       retries: 3
     labels:
@@ -368,6 +368,10 @@ services:
     extra_hosts:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
+    ports:
+      - "15555:5555"
+      - "18080:8080"
+      - "18793:8793"
     volumes:
       - ../dcos/dags:/usr/local/airflow/dags
       # Uncomment to include custom plugins
@@ -410,6 +414,11 @@ services:
       # - POSTGRES_DB=airflow
       # - REDIS_PASSWORD=redispass
     command: worker
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://$$(hostname):8793 || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -439,6 +448,11 @@ services:
       # - POSTGRES_DB=airflow
       # - REDIS_PASSWORD=redispass
     command: worker
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://$$(hostname):8793 || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -468,6 +482,11 @@ services:
       # - POSTGRES_DB=airflow
       # - REDIS_PASSWORD=redispass
     command: worker
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://$$(hostname):8793 || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     labels:
       - "kloudsense.mode=DCOS"
 
