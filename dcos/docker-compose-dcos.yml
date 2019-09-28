@@ -517,8 +517,8 @@ services:
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.8.2
-        #depends_on:
-        #  - drools-connector
+    depends_on:
+      - drools-connector
     ports:
       - "8080:8080"
       - "9990:9990"

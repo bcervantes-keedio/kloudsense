@@ -5,3 +5,5 @@ git@github.com:kloudsense/ks-grafana-dcos.git:0.1-beta
 git@github.com:kloudsense/ks-cratedb-ce.git:0.1.2-beta
 git@github.com:kloudsense/ks-cp-adapter.git:0.1.1-beta
 git@github.com:kloudsense/ks-airflow.git:0.1-beta
+git@github.com:kloudsense/ks-rules-engine.git:0.1-beta
+git@github.com:kloudsense/ks-rules-engine-connector.git:0.1-beta
