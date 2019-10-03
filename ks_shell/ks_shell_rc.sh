@@ -48,12 +48,12 @@ function _ks_system_bootstrap () {
     dcos)
       _ks_info_msg "Running Ansible for Node configuration"
 
-      ansible-playbook -i $_KS_CLI_INVENTORY \
-                          dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml &>/dev/null
+      _ansible_output="$(ansible-playbook -i $_KS_CLI_INVENTORY dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml)"
       if [[ $? -eq 0 ]]; then
         _ks_ok_msg "DC/OS nodes configured!"
       else
         _ks_err_msg "DC/OS nodes configuration failed!"
+        echo -e "$_ansible_output" > bootstrap_ansible.log
       fi
       _ks_info_msg "Launching DC/OS monitoring Bootstrap"
       KS_HOME=$KS_HOME bash ./dcos/bootstrap/bootstrap_dcos.sh
@@ -490,6 +490,44 @@ function _ks_module_menu () {
 
 
 #=============================
+# Module Management
+#===============================================================================
+
+# Check the dependencies for KloudSense
+function _ks_check_dependencies () {
+  _ks_check_docker
+  [[ $? -ne $_KS_CLI_TRUE ]] && { return $_KS_CLI_FALSE; }
+
+  _ks_check_docker_compose
+  [[ $? -ne $_KS_CLI_TRUE ]] && { return $_KS_CLI_FALSE; }
+
+  _ks_check_ansible
+  [[ $? -ne $_KS_CLI_TRUE ]] && { return $_KS_CLI_FALSE; }
+
+  _ks_ok_msg "All dependencies are OK"
+}
+
+# Check if docker is installed
+function _ks_check_docker () {
+  which docker &>/dev/null
+  [[ $? -ne 0 ]] && { _ks_err_msg "Docker is not installed"; return $_KS_CLI_FALSE; }
+}
+
+# Check if docker-compose is installed
+function _ks_check_docker_compose () {
+  which docker-compose &>/dev/null
+  [[ $? -ne 0 ]] && { _ks_err_msg "Docker-Compose is not installed"; return $_KS_CLI_FALSE; }
+}
+
+# Check if docker-compose is installed
+function _ks_check_ansible () {
+  which ansible-playbook &>/dev/null
+  [[ $? -ne 0 ]] && { _ks_err_msg "Ansible is not installed"; return $_KS_CLI_FALSE; }
+}
+
+
+
+#=============================
 # Info methods
 #===============================================================================
 
@@ -521,6 +559,8 @@ function _ks_usage_msg () {
     mode            Manage deploys modes ( DCOS )
     module          Manage module actions
     version         Print Version information
+    check           Check the dependencies for KloudSense
+    help            Print this message
 \n"
 }
 
@@ -543,6 +583,10 @@ function _ks_top_menu () {
     version)
       shift
       _ks_print_version
+      ;;
+    check)
+      shift
+      _ks_check_dependencies
       ;;
     help)
       _ks_usage_msg
