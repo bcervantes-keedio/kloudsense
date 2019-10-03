@@ -5,7 +5,7 @@
 #===============================================================================
 
 KS_HOME="$( cd "$(dirname "$0")" ; pwd -P )"
-source $KS_HOME/ks_cli/environment
+source $KS_HOME/ks_shell/environment
 
 
 
@@ -14,7 +14,7 @@ source $KS_HOME/ks_cli/environment
 # Prompt
 #===============================================================================
 # Get the String to print the profile in bash prompt
-PS1='`_ks_mode_prompt` \033[33mKloudSense-Console\033[37m:\033[34m\W\033[36m$\033[0m ' 
+PS1='\[\033[31m\][KShell] \[\033[33m\]\u\[\033[37m\]:\[\033[34m\]\W\[\033[36m\]$\[\033[0m\] '
 export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5;13:do=38;5;5:bd=48;5;232;38;5;11:cd=48;5;232;38;5;3:or=48;5;232;38;5;9:mi=05;48;5;232;38;5;15:su=48;5;196;38;5;15:sg=48;5;11;38;5;16:ca=48;5;196;38;5;226:tw=48;5;10;38;5;16:ow=48;5;10;38;5;21:st=48;5;21;38;5;15:ex=38;5;34:*.tar=38;5;9:*.tgz=38;5;9:*.arc=38;5;9:*.arj=38;5;9:*.taz=38;5;9:*.lha=38;5;9:*.lz4=38;5;9:*.lzh=38;5;9:*.lzma=38;5;9:*.tlz=38;5;9:*.txz=38;5;9:*.tzo=38;5;9:*.t7z=38;5;9:*.zip=38;5;9:*.z=38;5;9:*.Z=38;5;9:*.dz=38;5;9:*.gz=38;5;9:*.lrz=38;5;9:*.lz=38;5;9:*.lzo=38;5;9:*.xz=38;5;9:*.bz2=38;5;9:*.bz=38;5;9:*.tbz=38;5;9:*.tbz2=38;5;9:*.tz=38;5;9:*.deb=38;5;9:*.rpm=38;5;9:*.jar=38;5;9:*.war=38;5;9:*.ear=38;5;9:*.sar=38;5;9:*.rar=38;5;9:*.alz=38;5;9:*.ace=38;5;9:*.zoo=38;5;9:*.cpio=38;5;9:*.7z=38;5;9:*.rz=38;5;9:*.cab=38;5;9:*.jpg=38;5;13:*.jpeg=38;5;13:*.gif=38;5;13:*.bmp=38;5;13:*.pbm=38;5;13:*.pgm=38;5;13:*.ppm=38;5;13:*.tga=38;5;13:*.xbm=38;5;13:*.xpm=38;5;13:*.tif=38;5;13:*.tiff=38;5;13:*.png=38;5;13:*.svg=38;5;13:*.svgz=38;5;13:*.mng=38;5;13:*.pcx=38;5;13:*.mov=38;5;13:*.mpg=38;5;13:*.mpeg=38;5;13:*.m2v=38;5;13:*.mkv=38;5;13:*.webm=38;5;13:*.ogm=38;5;13:*.mp4=38;5;13:*.m4v=38;5;13:*.mp4v=38;5;13:*.vob=38;5;13:*.qt=38;5;13:*.nuv=38;5;13:*.wmv=38;5;13:*.asf=38;5;13:*.rm=38;5;13:*.rmvb=38;5;13:*.flc=38;5;13:*.avi=38;5;13:*.fli=38;5;13:*.flv=38;5;13:*.gl=38;5;13:*.dl=38;5;13:*.xcf=38;5;13:*.xwd=38;5;13:*.yuv=38;5;13:*.cgm=38;5;13:*.emf=38;5;13:*.axv=38;5;13:*.anx=38;5;13:*.ogv=38;5;13:*.ogx=38;5;13:*.aac=38;5;45:*.au=38;5;45:*.flac=38;5;45:*.mid=38;5;45:*.midi=38;5;45:*.mka=38;5;45:*.mp3=38;5;45:*.mpc=38;5;45:*.ogg=38;5;45:*.ra=38;5;45:*.wav=38;5;45:*.axa=38;5;45:*.oga=38;5;45:*.spx=38;5;45:*.xspf=38;5;45:"
 
 _OS=$(uname)
@@ -26,142 +26,6 @@ else
 fi
 
 unset _OS
-
-
-
-
-
-#=============================
-# Images Management
-#===============================================================================
-
-# Aux Function to return the name of the KS image present on Dockerfile
-function _ks_get_dockerfile_image_name () {
-  local version="$(sed -n 's/LABEL version=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
-  local vendor="$(sed -n 's/LABEL vendor=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
-  local image_name="$_KS_CLI_IMAGE_PREFIX$(sed -n 's/LABEL image_name=\"\(.*\)\"/\1/p' $(dirname $module)/Dockerfile | tail -1)"
-  echo "$vendor/$image_name:$version"
-}
-
-# Clean all KS docker images
-function _ks_image_clean () {
-  _ks_info_msg "Cleanning KS Images..."
-  docker images -a | grep "$_KS_CLI_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
-  [[ $? -eq 0 ]] && { _ks_ok_msg "Cleanning KS Images Success"; } || { _ks_err_msg "Cleanning KS Images Error"; }
-}
-
-# Print all the KS images
-function _ks_image_list () {
-  docker images | grep "$_KS_CLI_IMAGE_PREFIX" | awk '{ print "\033[37m[\033[34m*\033[37m] \033[31mImage Name:\t\033[33m"$1":"$2"\033[0m" }'
-}
-
-# Launch export process and compress All the exported docker images on a Tar File
-function _ks_image_export () {
-  local retval=0
-  rm -Rf $KS_HOME/docker/docker_images
-  mkdir $KS_HOME/docker/docker_images
-  _ks_info_msg "Exporting Images"
-  for module in $(find modules -name Dockerfile); do
-    # Get Image Name
-    image_name="$(_ks_get_dockerfile_image_name)"
-
-    # rpm-builder image not included on the export process
-    if [[ $image_name == keedio/ks-rpm_builder:* ]]; then
-      continue
-    fi
-
-    _ks_info_msg "\033[31mImage Name:\033[033m $image_name"
-
-    docker save $image_name > $KS_HOME/docker/docker_images/$(echo "$image_name" | sed 's/[\/:]/_/g').image
-    [[ $? -ne 0 ]] && { retval=1; _ks_err_msg "Exporting Image error"; }
-  done
-  [[ $retval -ne 0 ]] && { _ks_err_msg "Exporting Image error"; } || { _ks_ok_msg "Exportation success"; }
-}
-
-# Import a Tar file with images
-function _ks_image_import () {
-  mkdir $KS_HOME/docker/docker_images &>/dev/null
-  local retval=0
-
-  _ks_info_msg "Importing Images"
-  for image in $(ls $KS_HOME/docker/docker_images/*.image); do
-    _ks_info_msg "\033[31mImporting:\033[033m $image"
-    docker load --input $image &>/dev/null
-    [[ $? -ne 0 ]] && { retval=1; _ks_err_msg "Importing Image error: $image_name"; }
-    done
-  [[ $retval -ne 0 ]] && { _ks_err_msg "Importing Image error"; } || { _ks_ok_msg "Importation success"; }
-}
-
-# Compress the image files on a tar file
-function _ks_image_box () {
-  local tar_file_name=$1
-  [[ -z $tar_file_name ]] && { _ks_err_msg "No output file specified"; return; }
-  _ks_info_msg "Compressing Images"
-  if [[ -d $KS_HOME/docker/docker_images ]]; then
-    tar -czf $tar_file_name $KS_HOME/docker/docker_images
-  else
-    _ks_err_msg "Docker Images folder not found"
-  fi
-  _ks_ok_msg "Compresion Successful"
-}
-
-# Extract the image files of a tar file
-function _ks_image_unbox () {
-  local tar_file_name=$1
-  _ks_info_msg "Uncompressing Images"
-  [[ ! -f $tar_file_name ]] && { _ks_err_msg "Target: $tar_file_name not found"; return; }
-  tar -xzf $tar_file_name -C $KS_HOME > /dev/null
-  _ks_ok_msg "Uncompresion Successful"
-}
-
-# Prints Image Module Help Message 
-function _ks_image_help () {
-  printf "KloudSense CLI Image Management:
-  \n  Usage:   ks image <command> [options]\n
-  Image Commands:
-    clean                    Remove all the KS images
-    list                     List all the current KS builded images
-    export                   Save in \"docker/docker_images\" folder all the KS builded images
-    import                   Load from \"docker/docker_images\" folder all the KS available images
-    box <TAR_FILE_NAME>      Compress in a TAR file all the available image files in \"docker/docker_images\" folder
-    unbox <TAR_FILE_NAME>    Uncompress from a given TAR file the KS images inside it in the \"docker/docker_images\" folder
-    help                     Print this message
-\n"
-}
-
-# Menu image function
-function _ks_image_menu () {
-  local cmd=$1
-  shift
-  case "$cmd" in
-    clean)
-      _ks_image_clean
-      ;;
-    list)
-      _ks_image_list
-      ;;
-    export)
-      _ks_image_export
-      ;;
-    import)
-      _ks_image_import
-      ;;
-    box)
-      _ks_image_box $@
-      ;;
-    unbox)
-      _ks_image_unbox $@
-      ;;
-    help)
-      _ks_image_help
-      ;;
-    *)
-      _ks_err_msg "Unrecogniced Image command"
-      _ks_image_help
-      ;;
-  esac
-}
-
 
 
 
@@ -197,15 +61,6 @@ function _ks_system_bootstrap () {
         _ks_ok_msg "KS-CrateDB Bootstrap OK"
       else 
         _ks_err_msg "KS-CrateDB Bootstrap ERROR"
-      fi
-      ;;
-    cloudera)
-      _ks_info_msg "Launching Cloudera monitoring Bootstrap"
-      KS_HOME=$KS_HOME bash ./cloudera/bootstrap/bootstrap_cloudera.sh
-      if [[ $? -eq 0 ]]; then
-        _ks_ok_msg "Cloudera monitoring Bootstrap OK"
-      else 
-        _ks_err_msg "Cloudera monitoring Bootstrap ERROR"
       fi
       ;;
     default)
@@ -361,37 +216,26 @@ function _ks_system_menu () {
 # Module Management
 #===============================================================================
 
-# Set a deploy mode ( cloudera / dcos / none )
+# Set a deploy mode ( dcos / none )
 function _ks_mode_set () {
   local mode=$1
   _KS_CLI_MODE_CURRENT="$mode"
   case "$mode" in
-    cloudera)
-      _KS_CLI_MODULES_FILE=$KS_MODULES_CLOUDERA_FILE
-      _KS_CLI_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_CLOUDERA_FILE
-      _KS_CLI_MODE_PROMPT_STR="\033[31m[CLOUDERA]\033[0m"
-      _KS_CLI_INVENTORY=$KS_CLOUDERA_INVENTORY_FILE
-      ;;
     dcos)
       _KS_CLI_MODULES_FILE=$KS_MODULES_DCOS_FILE
       _KS_CLI_MODE_DOCKERCOMPOSE_FILE=$KS_DOCKERCOMPOSE_DCOS_FILE
-      _KS_CLI_MODE_PROMPT_STR="\033[31m[DC/OS]\033[0m"
+      _KS_CLI_MODE_PROMPT_STR="\[\033[31m\][DC/OS]\[\033[0m\]"
       _KS_CLI_INVENTORY=$KS_DCOS_INVENTORY_FILE
       ;;
     none)
       _KS_CLI_MODULES_FILE=""
       _KS_CLI_MODE_DOCKERCOMPOSE_FILE=""
-      _KS_CLI_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+      _KS_CLI_MODE_PROMPT_STR="\[\033[31m\][NONE]\[\033[0m\]"
       _KS_CLI_INVENTORY=""
       ;;
   esac
-  _ks_info_msg "Mode set to: $mode"
+  _ks_mode_print_current
 }
-
-# Return a string for the prompt with the current mode
-function _ks_mode_prompt () {
-  echo -e "$_KS_CLI_MODE_PROMPT_STR"
-} \
 
 # Check if a mode is selected
 function _ks_is_mode_selected () {
@@ -406,7 +250,6 @@ function _ks_is_mode_selected () {
 function _ks_mode_list () {
   printf "KloudSense available modes:
   \n  Modes:\n
-      Cloudera               Cloudera Cluster Monitoring ( ks mode cloudera ) 
       DC/OS                  DC/OS Cluster Monitoring ( ks mode dcos )
       None                   Unset the mode configuration ( ks mode none )
 \n"
@@ -422,7 +265,6 @@ function _ks_mode_help () {
   printf "KloudSense CLI deploy Mode Management:
   \n  Usage:   ks system <command> [options]\n
   Mode Commands:
-    cloudera                 Set the deploy mode for Cloudera
     dcos                     Set the deploy mode for DC/OS
     none                     Unset the deploy mode
     list                     List all the available modes
@@ -436,9 +278,6 @@ function _ks_mode_menu () {
   local cmd=$1
   shift
   case "$cmd" in
-    cloudera)
-      _ks_mode_set "cloudera"
-      ;;
     dcos)
       _ks_mode_set "dcos"
       ;;
@@ -563,7 +402,14 @@ function _ks_module_pull_modules () {
 
 # Clean pulled modules
 function _ks_module_clean_modules () {
+  # Remove repo downloads
   rm -Rf $KS_MODULES_DOWNLOAD_DIR
+
+  # Remove local docker images
+  _ks_info_msg "Cleanning KS Images..."
+  docker images -a | grep "$_KS_CLI_IMAGE_PREFIX" | awk '{ print $3 }' | xargs docker rmi -f 1>/dev/null
+  [[ $? -eq 0 ]] && { _ks_ok_msg "Cleanning KS Images Success"; } || { _ks_err_msg "Cleanning KS Images Error"; }
+
   _ks_ok_msg "Modules pulled cleaned"
 }
 
@@ -663,17 +509,16 @@ $(cat $KS_CLI_LOGO_PATH)
 
 # Print Current Version
 function _ks_print_version () {
-  echo "$_KS_CLI_VERSION"
+  echo -e "\033[36mKloudSense:\033[37m $_KS_CLI_VERSION\033[0m\n"
 }
 
 # KS command usage function
 function _ks_usage_msg () {
-  printf "\n  KloudSense $(_ks_print_version)\n"
+  printf "\n  $(_ks_print_version)"
   printf "\n  Usage:   ks <module> <command> [options]\n"
   printf "\n  Modules:
-    image           Manage docker images
     system          Manage system actions
-    mode            Manage deploys modes ( Cloudera / DCOS )
+    mode            Manage deploys modes ( DCOS )
     module          Manage module actions
     version         Print Version information
 \n"
@@ -683,10 +528,6 @@ function _ks_usage_msg () {
 function _ks_top_menu () {
   local cmd=$1
   case "$cmd" in
-    image)
-      shift
-      _ks_image_menu $@
-      ;;
     system)
       shift
       _ks_system_menu $@
