@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # CrateDB Configuration
-source $KS_HOME/ks_cli/environment
+source $KS_HOME/ks_shell/environment
 COUNTER=0
 CRATE_ENDPOINT="127.0.0.1"
 CRATE_PORT="4200"

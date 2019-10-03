@@ -4,8 +4,6 @@
 #===============================================================================
 
 
-
-
 #===============================================================================
 # KloudSense
 #===============================================================================
@@ -26,7 +24,7 @@ services:
       - "prometheus:172.16.2.1"
     volumes:
       - type: bind
-        source: ../dcos/grafana/grafana.ini
+        source: ../../config/grafana/grafana.ini
         target: /etc/grafana/grafana.ini
     healthcheck:
       test: ["CMD-SHELL", "curl -XGET http://localhost:3000/api/health | grep '\"database\": \"ok\"'"]
@@ -47,8 +45,6 @@ services:
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.2.1
-    depends_on:
-      - grafana
     extra_hosts:
       - "prometheus:172.16.2.1"
       - "grafana:172.16.1.1"
@@ -58,13 +54,13 @@ services:
       - "cp-adapter-write:172.16.2.3"
     volumes:
       - type: bind
-        source: ../dcos/system/resolv.conf
+        source: ../../config/prometheus/resolv.conf
         target: /etc/resolv.conf
       - type: bind
-        source: ../dcos/prometheus/rules.yml
+        source: ../../config/prometheus/rules.yml
         target: /etc/prometheus/rules.yml
       - type: bind
-        source: ../dcos/prometheus/prometheus.yml
+        source: ../../config/prometheus/prometheus.yml
         target: /etc/prometheus/prometheus.yml
       - type: volume
         source: prometheus_data
@@ -93,7 +89,7 @@ services:
       - "cratedb-endpoint:172.16.6.0"
     volumes:
       - type: bind
-        source: ../dcos/cp-adapter-read/config.yml
+        source: ../../config/cp-adapter-read/config.yml
         target: /config.yml
     labels:
       - "kloudsense.mode=DCOS"
@@ -114,7 +110,7 @@ services:
       - "cratedb-endpoint:172.16.6.0"
     volumes:
       - type: bind
-        source: ../dcos/cp-adapter-write/config.yml
+        source: ../../config/cp-adapter-write/config.yml
         target: /config.yml
     labels:
       - "kloudsense.mode=DCOS"
@@ -136,7 +132,7 @@ services:
       - "5432:5432"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-load-balancer/crate.yml
+        source: ../../config/cratedb/node-load-balancer/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -161,7 +157,7 @@ services:
       - "4201:4200"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-001/crate.yml
+        source: ../../config/cratedb/node-001/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -186,7 +182,7 @@ services:
       - "4202:4200"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-002/crate.yml
+        source: ../../config/cratedb/node-002/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -211,7 +207,7 @@ services:
       - "4203:4200"
     volumes:
       - type: bind
-        source: ../dcos/cratedb/node-003/crate.yml
+        source: ../../config/cratedb/node-003/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -238,7 +234,7 @@ services:
       - "prometheus:172.16.2.1"
     volumes:
       - type: bind
-        source: ../dcos/alertmanager/alertmanager.yml
+        source: ../../config/alertmanager/alertmanager.yml
         target: /etc/alertmanager/alertmanager.yml
     healthcheck:
       test: ["CMD-SHELL", "[[ \"$$(wget -q -O - http://localhost:9093/-/healthy)\" == \"OK\" ]]"]
@@ -312,14 +308,8 @@ services:
       - LOAD_EX=n
       - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - EXECUTOR=Celery
-      # - POSTGRES_USER=airflow
-      # - POSTGRES_PASSWORD=airflow
-      # - POSTGRES_DB=airflow
-      # - REDIS_PASSWORD=redispass
     volumes:
-      - ../dcos/dags:/usr/local/airflow/dags
-      # Uncomment to include custom plugins
-      # - ./plugins:/usr/local/airflow/plugins
+      - ../../config/airflow/dags:/usr/local/airflow/dags
     command: webserver
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
@@ -344,7 +334,6 @@ services:
       - "redis:172.16.7.1"
     environment:
       - EXECUTOR=Celery
-      # - REDIS_PASSWORD=redispass
     ports:
       - "5555:5555"
     command: flower
@@ -370,17 +359,11 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ../dcos/dags:/usr/local/airflow/dags
-      # Uncomment to include custom plugins
-      # - ./plugins:/usr/local/airflow/plugins
+      - ../../config/airflow/dags:/usr/local/airflow/dags
     environment:
       - LOAD_EX=n
       - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - EXECUTOR=Celery
-      # - POSTGRES_USER=airflow
-      # - POSTGRES_PASSWORD=airflow
-      # - POSTGRES_DB=airflow
-      # - REDIS_PASSWORD=redispass
     command: scheduler
     labels:
       - "kloudsense.mode=DCOS"
@@ -400,16 +383,10 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ../dcos/dags:/usr/local/airflow/dags
-      # Uncomment to include custom plugins
-      # - ./plugins:/usr/local/airflow/plugins
+      - ../../config/airflow/dags:/usr/local/airflow/dags
     environment:
       - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - EXECUTOR=Celery
-      # - POSTGRES_USER=airflow
-      # - POSTGRES_PASSWORD=airflow
-      # - POSTGRES_DB=airflow
-      # - REDIS_PASSWORD=redispass
     command: worker
     healthcheck:
       test: ["CMD-SHELL", "curl -s -o /dev/null http://$$(hostname):8793 || exit 1"]
@@ -434,16 +411,10 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ../dcos/dags:/usr/local/airflow/dags
-      # Uncomment to include custom plugins
-      # - ./plugins:/usr/local/airflow/plugins
+      - ../../config/airflow/dags:/usr/local/airflow/dags
     environment:
       - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - EXECUTOR=Celery
-      # - POSTGRES_USER=airflow
-      # - POSTGRES_PASSWORD=airflow
-      # - POSTGRES_DB=airflow
-      # - REDIS_PASSWORD=redispass
     command: worker
     healthcheck:
       test: ["CMD-SHELL", "curl -s -o /dev/null http://$$(hostname):8793 || exit 1"]
@@ -468,16 +439,10 @@ services:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
     volumes:
-      - ../dcos/dags:/usr/local/airflow/dags
-      # Uncomment to include custom plugins
-      # - ./plugins:/usr/local/airflow/plugins
+      - ../../config/airflow/dags:/usr/local/airflow/dags
     environment:
       - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - EXECUTOR=Celery
-      # - POSTGRES_USER=airflow
-      # - POSTGRES_PASSWORD=airflow
-      # - POSTGRES_DB=airflow
-      # - REDIS_PASSWORD=redispass
     command: worker
     healthcheck:
       test: ["CMD-SHELL", "curl -s -o /dev/null http://$$(hostname):8793 || exit 1"]
@@ -522,13 +487,6 @@ services:
     ports:
       - "8080:8080"
       - "9990:9990"
-        #    volumes:
-        #      - type: bind
-        #        source: ../dcos/drools/standalone.conf
-        #        target: /opt/drools/wildfly-14.0.1.Final/bin/standalone.conf
-        #      - type: bind
-        #        source: ../dcos/drools/standalone-full.xml
-        #        target: /opt/drools/wildfly-14.0.1.Final/standalone/configuration/standalone-full.xml
     labels:
       - "kloudsense.mode=DCOS"
 
