@@ -23,7 +23,7 @@
 
     - name: Rsyslog Config file for System logs
       copy:
-        src: ../../config/rsyslog/config/system_logs.conf
+        src: ../../../config/rsyslog/config/system_logs.conf
         dest: /etc/rsyslog.d/system_logs.conf
         owner: root
         group: root
@@ -100,7 +100,7 @@
   
     - name: Rsyslog Config file for DC/OS containers logs
       copy:
-        src: ../../config/rsyslog/config/dcos_containers_logs.conf
+        src: ../../../config/rsyslog/config/dcos_containers_logs.conf
         dest: /etc/rsyslog.d/dcos_containers_logs.conf
         owner: root
         group: root
@@ -119,7 +119,7 @@
 
     - name: Container Logs Processor script
       copy:
-        src: ../../config/rsyslog/src/container_log_processor.py
+        src: ../../../config/rsyslog/src/container_log_processor.py
         dest: /opt/kloudsense/scripts/container_log_processor.py
         owner: root
         group: root
@@ -128,7 +128,7 @@
 
     - name: Container Logs Proxy Rsyslog
       copy:
-        src: ../../config/rsyslog/src/dcos_rsyslog_tcp_proxy.py
+        src: ../../../config/rsyslog/src/dcos_rsyslog_tcp_proxy.py
         dest: /opt/kloudsense/scripts/dcos_rsyslog_tcp_proxy.py
         owner: root
         group: root
@@ -137,7 +137,7 @@
 
     - name: Rsyslog Config file for DC/OS containers logs
       copy:
-        src: ../../config/rsyslog/config/dcos_rsyslog_tcp_proxy.service
+        src: ../../../config/rsyslog/config/dcos_rsyslog_tcp_proxy.service
         dest: /etc/systemd/system/dcos_rsyslog_tcp_proxy.service
         owner: root
         group: root
