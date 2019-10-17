@@ -35,6 +35,16 @@ scrape_configs:
     static_configs:
     - targets: ['alertmanager:9093']
 
+  # CP-Adapter-Write
+  - job_name: 'CP-Adapter-Write'
+    static_configs:
+    - targets: ['cp-adapter-write:9268']
+
+  # CP-Adapter-Write
+  - job_name: 'CP-Adapter-Read'
+    static_configs:
+    - targets: ['cp-adapter-read:9268']
+
   # DC/OS Cluster
   - job_name: 'DC/OS-Metrics'
     metrics_path: /metrics

@@ -34,10 +34,11 @@ network.host: _site_
 
 # Cluster discovery: Specify the hosts which will form the CrateDB cluster
 discovery.seed_hosts:
-    - 172.16.6.0
-    - 172.16.6.1
-    - 172.16.6.2
-    - 172.16.6.3
+    - node-lb-01
+    - node-lb-02
+    - node-data-001
+    - node-data-002
+    - node-data-003
 
 # Bootstrap the cluster using an initial set of master-eligible nodes. All
 # master-eligible nodes must be set here for new (or upgraded from CrateDB < 4.x)
@@ -45,10 +46,11 @@ discovery.seed_hosts:
 # initially vote an initial master node:
 #
 cluster.initial_master_nodes:
-    - 172.16.6.0
-    - 172.16.6.1
-    - 172.16.6.2
-    - 172.16.6.3
+    - node-lb-01
+    - node-lb-02
+    - node-data-001
+    - node-data-002
+    - node-data-003
 
 
 ################################# Full Settings ##############################
@@ -170,7 +172,7 @@ cluster.name: KloudSense
 
 # Node names are generated dynamically on startup, so you're relieved
 # from configuring them manually. You can tie this node to a specific name:
-node.name: "Node-Load-Balancer"
+node.name: "node-lb-01"
 
 # Every node can be configured to allow or deny being eligible as the master,
 # and to allow or deny to store the data.

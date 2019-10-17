@@ -86,7 +86,8 @@ services:
       - prometheus
     extra_hosts:
       - "prometheus:172.16.2.1"
-      - "cratedb-endpoint:172.16.6.0"
+      - "cratedb-load-balancer-01:172.16.6.1"
+      - "cratedb-load-balancer-02:172.16.6.2"
     volumes:
       - type: bind
         source: ../../config/cp-adapter-read/config.yml
@@ -107,7 +108,8 @@ services:
       - prometheus
     extra_hosts:
       - "prometheus:172.16.2.1"
-      - "cratedb-endpoint:172.16.6.0"
+      - "cratedb-load-balancer-01:172.16.6.1"
+      - "cratedb-load-balancer-02:172.16.6.2"
     volumes:
       - type: bind
         source: ../../config/cp-adapter-write/config.yml
@@ -116,23 +118,30 @@ services:
       - "kloudsense.mode=DCOS"
 
 
-  cratedb-ce-node-load-balancer:
+  cratedb-node-load-balancer-01:
     image: keedio/ks-cratedb-ce:0.1.2-beta
     restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-load-balancer
-    hostname: ks-dcos-cratedb-ce-node-load-balancer
+    container_name: ks-dcos-cratedb-node-load-balancer-01
+    hostname: ks-dcos-cratedb-node-load-balancer-01
+    privileged: true
     networks:
       ks_dcos_net:
-        ipv4_address: 172.16.6.0
+        ipv4_address: 172.16.6.1
     depends_on:
       - cp-adapter-read
       - cp-adapter-write
     ports:
       - "4200:4200"
       - "5432:5432"
+    extra_hosts:
+      - "node-lb-01:172.16.6.1"
+      - "node-lb-02:172.16.6.2"
+      - "node-data-001:172.16.6.10"
+      - "node-data-002:172.16.6.11"
+      - "node-data-003:172.16.6.12"
     volumes:
       - type: bind
-        source: ../../config/cratedb/node-load-balancer/crate.yml
+        source: ../../config/cratedb/node-lb-01/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -143,46 +152,30 @@ services:
       - "kloudsense.mode=DCOS"
 
 
-  cratedb-ce-node-001:
+  cratedb-node-load-balancer-02:
     image: keedio/ks-cratedb-ce:0.1.2-beta
     restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-001
-    hostname: ks-dcos-cratedb-ce-node-001
-    networks:
-      ks_dcos_net:
-        ipv4_address: 172.16.6.1
-    depends_on:
-      - cratedb-ce-node-load-balancer
-    ports:
-      - "4201:4200"
-    volumes:
-      - type: bind
-        source: ../../config/cratedb/node-001/crate.yml
-        target: /crate-ce/config/crate.yml
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    labels:
-      - "kloudsense.mode=DCOS"
-
-
-  cratedb-ce-node-002:
-    image: keedio/ks-cratedb-ce:0.1.2-beta
-    restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-002
-    hostname: ks-dcos-cratedb-ce-node-002
+    container_name: ks-dcos-cratedb-node-load-balancer-02
+    hostname: ks-dcos-cratedb-node-load-balancer-02
+    privileged: true
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.6.2
     depends_on:
-      - cratedb-ce-node-load-balancer
+      - cp-adapter-read
+      - cp-adapter-write
     ports:
-      - "4202:4200"
+      - "4201:4200"
+      - "5433:5433"
+    extra_hosts:
+      - "node-lb-01:172.16.6.1"
+      - "node-lb-02:172.16.6.2"
+      - "node-data-001:172.16.6.10"
+      - "node-data-002:172.16.6.11"
+      - "node-data-003:172.16.6.12"
     volumes:
       - type: bind
-        source: ../../config/cratedb/node-002/crate.yml
+        source: ../../config/cratedb/node-lb-02/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -193,21 +186,98 @@ services:
       - "kloudsense.mode=DCOS"
 
 
-  cratedb-ce-node-003:
+  cratedb-node-001:
     image: keedio/ks-cratedb-ce:0.1.2-beta
     restart: on-failure
-    container_name: ks-dcos-cratedb-ce-node-003
-    hostname: ks-dcos-cratedb-ce-node-003
+    container_name: ks-dcos-cratedb-node-001
+    hostname: ks-dcos-cratedb-node-001
+    privileged: true
     networks:
       ks_dcos_net:
-        ipv4_address: 172.16.6.3
+        ipv4_address: 172.16.6.10
     depends_on:
-      - cratedb-ce-node-load-balancer
-    ports:
-      - "4203:4200"
+      - cratedb-node-load-balancer-01
+      - cratedb-node-load-balancer-02
+    extra_hosts:
+      - "node-lb-01:172.16.6.1"
+      - "node-lb-02:172.16.6.2"
+      - "node-data-001:172.16.6.10"
+      - "node-data-002:172.16.6.11"
+      - "node-data-003:172.16.6.12"
     volumes:
+      - type: volume
+        source: cratedb-data-node-001
+        target: /crate-ce/data
       - type: bind
-        source: ../../config/cratedb/node-003/crate.yml
+        source: ../../config/cratedb/node-data-001/crate.yml
+        target: /crate-ce/config/crate.yml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  cratedb-node-002:
+    image: keedio/ks-cratedb-ce:0.1.2-beta
+    restart: on-failure
+    container_name: ks-dcos-cratedb-node-002
+    hostname: ks-dcos-cratedb-node-002
+    privileged: true
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.6.11
+    depends_on:
+      - cratedb-node-load-balancer-01
+      - cratedb-node-load-balancer-02
+    extra_hosts:
+      - "node-lb-01:172.16.6.1"
+      - "node-lb-02:172.16.6.2"
+      - "node-data-001:172.16.6.10"
+      - "node-data-002:172.16.6.11"
+      - "node-data-003:172.16.6.12"
+    volumes:
+      - type: volume
+        source: cratedb-data-node-002
+        target: /crate-ce/data
+      - type: bind
+        source: ../../config/cratedb/node-data-002/crate.yml
+        target: /crate-ce/config/crate.yml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  cratedb-node-003:
+    image: keedio/ks-cratedb-ce:0.1.2-beta
+    restart: on-failure
+    container_name: ks-dcos-cratedb-node-003
+    hostname: ks-dcos-cratedb-node-003
+    privileged: true
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.6.12
+    depends_on:
+      - cratedb-node-load-balancer-01
+      - cratedb-node-load-balancer-02
+    extra_hosts:
+      - "node-lb-01:172.16.6.1"
+      - "node-lb-02:172.16.6.2"
+      - "node-data-001:172.16.6.10"
+      - "node-data-002:172.16.6.11"
+      - "node-data-003:172.16.6.12"
+    volumes:
+      - type: volume
+        source: cratedb-data-node-003
+        target: /crate-ce/data
+      - type: bind
+        source: ../../config/cratedb/node-data-003/crate.yml
         target: /crate-ce/config/crate.yml
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://$$(hostname):4200 | grep '\"ok\" : true'"]
@@ -497,6 +567,9 @@ services:
 volumes:
   prometheus_data:
   airflow_pgsql_data:
+  cratedb-data-node-001:
+  cratedb-data-node-002:
+  cratedb-data-node-003:
 
 
 

@@ -1,17 +1,10 @@
 groups:
-- name: example
+- name: CP-Adapters
   rules:
-  - alert: HighCPU
-    expr: cpu_usage_user > 0.001
-    for: 1m
+  - alert: Write errors on CrateDB
+    expr: delta(crate_adapter_write_crate_failed_total[4m]) > 0
+    for: 2m
     labels:
       severity: error
     annotations:
-      summary: CPU HIGH
-  - alert: HighCPU2
-    expr: cpu_usage_user < 0.001
-    for: 1m
-    labels:
-      severity: error
-    annotations:
-      summary: CPU HIGH
+      summary: CrateDB insertion failed
