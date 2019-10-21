@@ -1,6 +1,11 @@
 ---
 - hosts: cluster
-  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    cratedb_endpoints: "{{ lookup('env','KS_CONFIG_CRATE_ENDPOINT') }}"
+
   tasks:
     - name: Install Rsyslog Repo
       yum_repository:
@@ -21,9 +26,13 @@
         state: latest
 
 
+    - name: debug
+      debug:
+        msg: "CrateDB endpoints: {{ cratedb_endpoints }}"
+
     - name: Rsyslog Config file for System logs
-      copy:
-        src: ../../../config/rsyslog/config/system_logs.conf
+      template:
+        src: ../../../config/rsyslog/config/system_logs.j2
         dest: /etc/rsyslog.d/system_logs.conf
         owner: root
         group: root
@@ -51,7 +60,12 @@
 
 
 - hosts: agents
-  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    cratedb_endpoints: "{{ lookup('env','KS_CONFIG_CRATE_ENDPOINT') }}"
+
   tasks:
     - name: Check if Python3 is installed
       raw: test -e /usr/bin/python3.6
@@ -95,12 +109,12 @@
       pip:
         name: systemd
         state: latest
-        executable: pip3
+        executable: /usr/local/bin/pip3
 
   
     - name: Rsyslog Config file for DC/OS containers logs
-      copy:
-        src: ../../../config/rsyslog/config/dcos_containers_logs.conf
+      template:
+        src: ../../../config/rsyslog/config/dcos_containers_logs.j2
         dest: /etc/rsyslog.d/dcos_containers_logs.conf
         owner: root
         group: root

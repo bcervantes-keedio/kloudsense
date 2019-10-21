@@ -1,5 +1,6 @@
 # Brief: DC/OS Container Logs Rsyslog Config
 # Author: Alejandro Villegas Lopez <avillegas@keedio.com>
+# Installation Date: {{ ansible_date_time.date }}
 ################################################################################
 
 # Template for insert container logs into CrateDB by Psql driver
@@ -55,5 +56,7 @@ ruleset(name="rs1") {
     # Process message
     action(type="mmexternal" interface.input="fulljson" binary="/opt/kloudsense/scripts/container_log_processor.py")
     # Write on CrateDB
-    action(type="ompgsql" server="192.168.2.206" user="" pass="" db="dcos" template="cliq" )
+{% for host in cratedb_endpoints %}
+    action(type="ompgsql" server="{{ host }}" user="" pass="" db="dcos" template="cliq" )
+{% endfor %}
 }
