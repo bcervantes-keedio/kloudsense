@@ -160,6 +160,9 @@ There are some files you can edit to configure KloudSense:
 
         **NOTE!**: the user to login in the DC/OS hosts must have administration permises.
 
+      To help you in this step, there is a little bash script to make this faster. The script requires that the inventory file of the step 3 was completed.
+      * Script path = tools/ssh_key_installer.sh
+
   3. Edit the inventory file and configure your nodes.
       ```sh
       vim dcos/config/bootstrap/dcos_hosts.inventory
