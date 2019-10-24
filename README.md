@@ -94,12 +94,16 @@ The rules, dags and config are customizable for each cluster and context.
 
 
 ## Component EndPoints
-  - **Grafana**: http://localhost:80
-  - **Prometheus**: http://localhost:60000
-  - **Alertmanager**: http://localhost:60100
-  - **CrateDB-CE**: http://localhost:4200
-  - **Drools**: http://localhost:8080
-  - **Airflow**: http://localhost:8083
+  - **Grafana**: http://localhost:20000
+  - **Prometheus**: http://localhost:20100
+  - **Alertmanager**: http://localhost:20110
+  - **CrateDB-CE-lb-1-UI**: http://localhost:20200
+  - **CrateDB-CE-lb-2-UI**: http://localhost:20201
+  - **CrateDB-CE-lb-1-PSQL**: http://localhost:20210
+  - **CrateDB-CE-lb-2-PSQL**: http://localhost:20211
+  - **Airflow-Webserver**: http://localhost:20300
+  - **Drools-WildFly**: http://localhost:20400
+  - **Drools-Business-Central**: http://localhost:20410
 
 
 
@@ -122,6 +126,13 @@ KloudSense is composed by some modules to build all the system components. Here 
   - **Docker-CE**: >= v18
   - **Docker-Compose** >= 1.23.1
   - **Ansible** >= 2.8.5
+  - **Kernel Config**: Run the following commands to increase the kernel max virtual memory areas (vm.max_map_count) required by CrateDB
+      ```sh
+      echo "vm.max_map_count = 262144" >> /etc/sysctl.conf 
+      sysctl -w vm.max_map_count=262144
+
+      ## If you only change the '/etc/sysctl.conf' itis 
+      ```
 
 
 

@@ -16,7 +16,7 @@ services:
     container_name: ks-dcos-grafana
     hostname: ks-dcos-grafana
     ports:
-      - "80:3000"
+      - "20000:3000"
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.1.1
@@ -41,7 +41,7 @@ services:
     container_name: ks-dcos-prometheus
     hostname: ks-dcos-prometheus
     ports:
-      - "60000:9090"
+      - "20100:9090"
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.2.1
@@ -67,6 +67,33 @@ services:
         target: /prometheus
     healthcheck:
       test: ["CMD-SHELL", "[[ \"$$(wget -q -O - http://localhost:9090/-/healthy)\" == \"Prometheus is Healthy.\" ]]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    labels:
+      - "kloudsense.mode=DCOS"
+
+
+  alertmanager:
+    image: keedio/ks-alertmanager:0.2-beta
+    restart: on-failure
+    container_name: ks-dcos-alertmanager
+    hostname: ks-dcos-alertmanager
+    networks:
+      ks_dcos_net:
+        ipv4_address: 172.16.4.1
+    depends_on:
+      - prometheus
+    ports:
+      - "20110:9093"
+    extra_hosts:
+      - "prometheus:172.16.2.1"
+    volumes:
+      - type: bind
+        source: ../../config/alertmanager/alertmanager.yml
+        target: /etc/alertmanager/alertmanager.yml
+    healthcheck:
+      test: ["CMD-SHELL", "[[ \"$$(wget -q -O - http://localhost:9093/-/healthy)\" == \"OK\" ]]"]
       interval: 30s
       timeout: 30s
       retries: 3
@@ -131,8 +158,8 @@ services:
       - cp-adapter-read
       - cp-adapter-write
     ports:
-      - "4200:4200"
-      - "5432:5432"
+      - "20200:4200"
+      - "20210:5432"
     extra_hosts:
       - "node-lb-01:172.16.6.1"
       - "node-lb-02:172.16.6.2"
@@ -165,8 +192,8 @@ services:
       - cp-adapter-read
       - cp-adapter-write
     ports:
-      - "4201:4200"
-      - "5433:5433"
+      - "20201:4200"
+      - "20211:5432"
     extra_hosts:
       - "node-lb-01:172.16.6.1"
       - "node-lb-02:172.16.6.2"
@@ -288,33 +315,6 @@ services:
       - "kloudsense.mode=DCOS"
 
 
-  alertmanager:
-    image: keedio/ks-alertmanager:0.2-beta
-    restart: on-failure
-    container_name: ks-dcos-alertmanager
-    hostname: ks-dcos-alertmanager
-    networks:
-      ks_dcos_net:
-        ipv4_address: 172.16.4.1
-    depends_on:
-      - prometheus
-    ports:
-      - "60100:9093"
-    extra_hosts:
-      - "prometheus:172.16.2.1"
-    volumes:
-      - type: bind
-        source: ../../config/alertmanager/alertmanager.yml
-        target: /etc/alertmanager/alertmanager.yml
-    healthcheck:
-      test: ["CMD-SHELL", "[[ \"$$(wget -q -O - http://localhost:9093/-/healthy)\" == \"OK\" ]]"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    labels:
-      - "kloudsense.mode=DCOS"
-
-
   airflow-redis:
     image: redis:3.2.7
     restart: on-failure
@@ -370,7 +370,7 @@ services:
       - airflow-postgres
       - airflow-redis
     ports:
-      - "8083:8080"
+      - "20300:8080"
     extra_hosts:
       - "postgres:172.16.7.2"
       - "redis:172.16.7.1"
@@ -555,8 +555,8 @@ services:
     depends_on:
       - drools-connector
     ports:
-      - "8080:8080"
-      - "9990:9990"
+      - "20400:8080"
+      - "20410:9990"
     labels:
       - "kloudsense.mode=DCOS"
 
