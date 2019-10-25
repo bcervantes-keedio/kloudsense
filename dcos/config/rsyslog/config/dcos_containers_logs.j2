@@ -57,6 +57,6 @@ ruleset(name="rs1") {
     action(type="mmexternal" interface.input="fulljson" binary="/opt/kloudsense/scripts/container_log_processor.py")
     # Write on CrateDB
 {% for host in cratedb_endpoints %}
-    action(type="ompgsql" server="{{ host }}" user="" pass="" db="dcos" template="cliq" )
+    action(type="ompgsql" server="{{ host }}" port="20210" user="" pass="" db="dcos" template="cliq" )
 {% endfor %}
 }

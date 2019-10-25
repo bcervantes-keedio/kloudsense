@@ -8,5 +8,5 @@ module(load="ompgsql")
 
 # Configure connection to CrateDB by the PGSQL entrypoint
 {% for host in cratedb_endpoints %}
-action(type="ompgsql" server="{{ host }}" user="" pass="" db="syslog")
+action(type="ompgsql" server="{{ host }}" port="20210" user="" pass="" db="syslog")
 {% endfor %}

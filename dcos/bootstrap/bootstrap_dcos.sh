@@ -4,7 +4,7 @@
 source $KS_HOME/ks_shell/environment
 COUNTER=0
 CRATE_ENDPOINT="127.0.0.1"
-CRATE_PORT="4200"
+CRATE_PORT="20200"
 
 _ks_info_msg "Creating CrateDB Data Tables"
 while :
