@@ -3,3 +3,5 @@
 .modules_download_dir
 docker/docker_images
 *.retry
+bootstrap_ansible.log
+dcos/config/airflow/dags/__pycache__/

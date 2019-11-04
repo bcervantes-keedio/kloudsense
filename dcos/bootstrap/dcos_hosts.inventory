@@ -1,0 +1,36 @@
+[cluster]
+192.168.4.102            ansible_connection=ssh            ansible_user=centos
+192.168.4.103            ansible_connection=ssh            ansible_user=centos
+192.168.4.104            ansible_connection=ssh            ansible_user=centos
+192.168.4.106            ansible_connection=ssh            ansible_user=centos
+192.168.4.107            ansible_connection=ssh            ansible_user=centos
+192.168.4.108            ansible_connection=ssh            ansible_user=centos
+192.168.4.109            ansible_connection=ssh            ansible_user=centos
+192.168.4.110            ansible_connection=ssh            ansible_user=centos
+192.168.4.111            ansible_connection=ssh            ansible_user=centos
+192.168.4.125            ansible_connection=ssh            ansible_user=centos
+
+[master]
+192.168.4.102
+192.168.4.103
+192.168.4.104
+
+[agents]
+192.168.4.106
+192.168.4.107
+192.168.4.108
+192.168.4.109
+192.168.4.110
+192.168.4.111
+192.168.4.125
+
+[public_agents]
+192.168.4.125
+
+[private_agents]
+192.168.4.106
+192.168.4.107
+192.168.4.108
+192.168.4.109
+192.168.4.110
+192.168.4.111

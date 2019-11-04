@@ -1,6 +1,11 @@
 ---
 - hosts: cluster
-  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    cratedb_endpoints: "{{ lookup('env','KS_CONFIG_CRATE_ENDPOINT') }}"
+
   tasks:
     - name: Install Rsyslog Repo
       yum_repository:
@@ -21,9 +26,13 @@
         state: latest
 
 
+    - name: debug
+      debug:
+        msg: "CrateDB endpoints: {{ cratedb_endpoints }}"
+
     - name: Rsyslog Config file for System logs
-      copy:
-        src: ../../../../dcos/rsyslog/config/system_logs.conf
+      template:
+        src: ../../../config/rsyslog/config/system_logs.j2
         dest: /etc/rsyslog.d/system_logs.conf
         owner: root
         group: root
@@ -51,7 +60,12 @@
 
 
 - hosts: agents
-  remote_user: root
+  become: yes
+  become_method: sudo
+
+  vars:
+    cratedb_endpoints: "{{ lookup('env','KS_CONFIG_CRATE_ENDPOINT') }}"
+
   tasks:
     - name: Check if Python3 is installed
       raw: test -e /usr/bin/python3.6
@@ -95,12 +109,12 @@
       pip:
         name: systemd
         state: latest
-        executable: pip3
+        executable: /usr/local/bin/pip3
 
   
     - name: Rsyslog Config file for DC/OS containers logs
-      copy:
-        src: ../../../../dcos/rsyslog/config/dcos_containers_logs.conf
+      template:
+        src: ../../../config/rsyslog/config/dcos_containers_logs.j2
         dest: /etc/rsyslog.d/dcos_containers_logs.conf
         owner: root
         group: root
@@ -119,7 +133,7 @@
 
     - name: Container Logs Processor script
       copy:
-        src: ../../../../dcos/rsyslog/src/container_log_processor.py
+        src: ../../../config/rsyslog/src/container_log_processor.py
         dest: /opt/kloudsense/scripts/container_log_processor.py
         owner: root
         group: root
@@ -128,7 +142,7 @@
 
     - name: Container Logs Proxy Rsyslog
       copy:
-        src: ../../../../dcos/rsyslog/src/dcos_rsyslog_tcp_proxy.py
+        src: ../../../config/rsyslog/src/dcos_rsyslog_tcp_proxy.py
         dest: /opt/kloudsense/scripts/dcos_rsyslog_tcp_proxy.py
         owner: root
         group: root
@@ -137,7 +151,7 @@
 
     - name: Rsyslog Config file for DC/OS containers logs
       copy:
-        src: ../../../../dcos/rsyslog/config/dcos_rsyslog_tcp_proxy.service
+        src: ../../../config/rsyslog/config/dcos_rsyslog_tcp_proxy.service
         dest: /etc/systemd/system/dcos_rsyslog_tcp_proxy.service
         owner: root
         group: root

@@ -1,11 +1,6 @@
-0.2-beta (XX/YY/2019)
+0.3 (XX/YY/2019)
 -----------------------------------------
-* [ENHANCEMENT] CrateDB in 3 node cluster integration
-* [ENHANCEMENT] Rsyslog for DC/OS containers logs configuration
-* [ENHANCEMENT] 
-* [ENHANCEMENT] 
-* [ENHANCEMENT] 
-
+KloudSense basic architecture for deploy on standalone
 
 
 0.1-beta (23/08/2019)
