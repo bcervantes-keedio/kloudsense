@@ -37,6 +37,7 @@ scrape_configs:
 
   # CP-Adapter-Write
   - job_name: 'CP-Adapter-Write'
+    scrape_interval: 10s
     static_configs:
     - targets: ['cp-adapter-write:9268']
 
@@ -46,7 +47,106 @@ scrape_configs:
     - targets: ['cp-adapter-read:9268']
 
   # DC/OS Cluster
-  - job_name: 'DC/OS-Metrics'
+  - job_name: 'DC/OS-Metrics 1'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 2'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 3'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 4'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 5'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 6'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 7'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 8'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 9'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+  - job_name: 'DC/OS-Metrics 10'
     metrics_path: /metrics
     scheme: http
     dns_sd_configs:
@@ -62,3 +162,13 @@ remote_read:
 
 remote_write:
    - url: http://cp-adapter-write:9268/write
+     remote_timeout: 1m
+     queue_config:
+       capacity: 40000
+       max_shards: 10
+       min_shards: 1
+       max_samples_per_send: 4000
+       batch_send_deadline: 10s
+       min_backoff: 500ms
+       max_backoff: 2100ms
+

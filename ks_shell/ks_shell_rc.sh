@@ -46,6 +46,15 @@ function _ks_system_bootstrap () {
 
   case "$_KS_CLI_MODE_CURRENT" in
     dcos)
+      _ks_info_msg "Launching DC/OS monitoring Bootstrap"
+      KS_HOME=$KS_HOME bash ./dcos/bootstrap/bootstrap_dcos.sh
+      if [[ $? -eq 0 ]]; then
+        _ks_ok_msg "KS-CrateDB Bootstrap OK"
+      else 
+        _ks_err_msg "KS-CrateDB Bootstrap ERROR"
+      fi
+
+
       _ks_info_msg "Running Ansible for Node configuration"
 
       _ansible_output="$(ansible-playbook -i $_KS_CLI_INVENTORY dcos/bootstrap/rsyslog/node_configuration/rsyslog_config.yml)"
@@ -54,13 +63,6 @@ function _ks_system_bootstrap () {
       else
         _ks_err_msg "DC/OS nodes configuration failed!"
         echo -e "$_ansible_output" > bootstrap_ansible.log
-      fi
-      _ks_info_msg "Launching DC/OS monitoring Bootstrap"
-      KS_HOME=$KS_HOME bash ./dcos/bootstrap/bootstrap_dcos.sh
-      if [[ $? -eq 0 ]]; then
-        _ks_ok_msg "KS-CrateDB Bootstrap OK"
-      else 
-        _ks_err_msg "KS-CrateDB Bootstrap ERROR"
       fi
       ;;
     default)

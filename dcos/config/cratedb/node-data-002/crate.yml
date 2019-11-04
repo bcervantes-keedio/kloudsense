@@ -17,7 +17,9 @@
 #   (e.g. 26G, but not more than ~30G to benefit from CompressedOops).
 #   Depending on the OS update '/etc/default/crate' or '/etc/sysconfig/crate'
 # - disable swapping
-#bootstrap.memory_lock : true
+bootstrap.memory_lock : true
+
+processors: 3
 
 # Storage: CrateDB can utilize multiple volumes in parallel, make sure to set
 # the owner to 'crate:crate'
