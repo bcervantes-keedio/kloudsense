@@ -19,7 +19,7 @@
 # - disable swapping
 bootstrap.memory_lock : true
 
-processors: 3
+processors: 2
 
 # Storage: CrateDB can utilize multiple volumes in parallel, make sure to set
 # the owner to 'crate:crate'

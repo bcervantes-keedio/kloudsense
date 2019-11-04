@@ -163,6 +163,8 @@ services:
       - "node-data-001:172.16.6.10"
       - "node-data-002:172.16.6.11"
       - "node-data-003:172.16.6.12"
+    environment:
+      - CRATE_HEAP_SIZE=1g 
     ulimits:
       memlock:
         soft: -1
@@ -198,6 +200,8 @@ services:
       - "node-data-001:172.16.6.10"
       - "node-data-002:172.16.6.11"
       - "node-data-003:172.16.6.12"
+    environment:
+      - CRATE_HEAP_SIZE=1g 
     ulimits:
       memlock:
         soft: -1
@@ -234,18 +238,18 @@ services:
       - "node-data-002:172.16.6.11"
       - "node-data-003:172.16.6.12"
     environment:
-      - CRATE_HEAP_SIZE=4g 
+      - CRATE_HEAP_SIZE=2g 
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - type: volume
-        source: cratedb-data-node-001
-        target: /crate-ce/data
-      #- type: bind
-      #  source: /nfs/node-001
+      #- type: volume
+      #  source: cratedb-data-node-001
       #  target: /crate-ce/data
+      - type: bind
+        source: /export/node-001
+        target: /crate-ce/data
       - type: bind
         source: ../../config/cratedb/node-data-001/crate.yml
         target: /crate-ce/config/crate.yml
@@ -277,18 +281,18 @@ services:
       - "node-data-002:172.16.6.11"
       - "node-data-003:172.16.6.12"
     environment:
-      - CRATE_HEAP_SIZE=4g 
+      - CRATE_HEAP_SIZE=2g 
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - type: volume
-        source: cratedb-data-node-002
-        target: /crate-ce/data
-      #- type: bind
-      #  source: /nfs/node-002
+      #- type: volume
+      #  source: cratedb-data-node-002
       #  target: /crate-ce/data
+      - type: bind
+        source: /export/node-002
+        target: /crate-ce/data
       - type: bind
         source: ../../config/cratedb/node-data-002/crate.yml
         target: /crate-ce/config/crate.yml
@@ -320,18 +324,18 @@ services:
       - "node-data-002:172.16.6.11"
       - "node-data-003:172.16.6.12"
     environment:
-      - CRATE_HEAP_SIZE=4g 
+      - CRATE_HEAP_SIZE=2g 
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - type: volume
-        source: cratedb-data-node-003
-        target: /crate-ce/data
-      #- type: bind
-      #  source: /nfs/node-003
+      #- type: volume
+      #  source: cratedb-data-node-003
       #  target: /crate-ce/data
+      - type: bind
+        source: /export/node-003
+        target: /crate-ce/data
       - type: bind
         source: ../../config/cratedb/node-data-003/crate.yml
         target: /crate-ce/config/crate.yml
