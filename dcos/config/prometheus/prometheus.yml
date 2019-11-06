@@ -1,8 +1,8 @@
 # My Global config
 global:
-  scrape_interval:     120s
-  scrape_timeout:      110s
-  evaluation_interval: 10s
+  scrape_interval:     2m
+  scrape_timeout:      30s
+  evaluation_interval: 1m
 
 
 
@@ -15,7 +15,8 @@ alerting:
       - drools_connector:9093
 
 rule_files:
-  - "rules.yml"
+  - "common-rules.yml"
+  - "kloudsense-rules.yml"
 
 
 
@@ -37,116 +38,18 @@ scrape_configs:
 
   # CP-Adapter-Write
   - job_name: 'CP-Adapter-Write'
-    scrape_interval: 10s
+    scrape_interval: 30s
     static_configs:
     - targets: ['cp-adapter-write:9268']
 
   # CP-Adapter-Write
   - job_name: 'CP-Adapter-Read'
+    scrape_interval: 30s
     static_configs:
     - targets: ['cp-adapter-read:9268']
 
   # DC/OS Cluster
-  - job_name: 'DC/OS-Metrics 1'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 2'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 3'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 4'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 5'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 6'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 7'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 8'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 9'
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - master.mesos
-      - slave.mesos
-      refresh_interval: 30s
-      type: A
-      port: 61091
-
-  - job_name: 'DC/OS-Metrics 10'
+  - job_name: 'DC/OS-Metrics'
     metrics_path: /metrics
     scheme: http
     dns_sd_configs:

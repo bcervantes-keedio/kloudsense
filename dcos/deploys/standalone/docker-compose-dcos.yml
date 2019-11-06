@@ -57,8 +57,11 @@ services:
         source: ../../config/prometheus/resolv.conf
         target: /etc/resolv.conf
       - type: bind
-        source: ../../config/prometheus/rules.yml
-        target: /etc/prometheus/rules.yml
+        source: ../../config/prometheus/rules/kloudsense-rules.yml
+        target: /etc/prometheus/kloudsense-rules.yml
+      - type: bind
+        source: ../../config/prometheus/rules/common-rules.yml
+        target: /etc/prometheus/common-rules.yml
       - type: bind
         source: ../../config/prometheus/prometheus.yml
         target: /etc/prometheus/prometheus.yml
@@ -110,7 +113,8 @@ services:
       ks_dcos_net:
         ipv4_address: 172.16.2.2
     depends_on:
-      - prometheus
+      - cratedb-node-load-balancer-01
+      - cratedb-node-load-balancer-02
     extra_hosts:
       - "prometheus:172.16.2.1"
       - "cratedb-load-balancer-01:172.16.6.1"
@@ -118,7 +122,7 @@ services:
     volumes:
       - type: bind
         source: ../../config/cp-adapter-read/config.yml
-        target: /root/config.yml
+        target: /config.yml
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -126,13 +130,14 @@ services:
   cp-adapter-write:
     image: keedio/ks-cp-adapter:0.1.1-beta
     restart: on-failure
-    container_name: ks-dcos-cp-adapte-writer
-    hostname: ks-dcos-cp-adapte-writer
+    container_name: ks-dcos-cp-adapter-write
+    hostname: ks-dcos-cp-adapter-write
     networks:
       ks_dcos_net:
         ipv4_address: 172.16.2.3
     depends_on:
-      - prometheus
+      - cratedb-node-load-balancer-01
+      - cratedb-node-load-balancer-02
     extra_hosts:
       - "prometheus:172.16.2.1"
       - "cratedb-load-balancer-01:172.16.6.1"
@@ -140,7 +145,7 @@ services:
     volumes:
       - type: bind
         source: ../../config/cp-adapter-write/config.yml
-        target: /root/config.yml
+        target: /config.yml
     labels:
       - "kloudsense.mode=DCOS"
 
@@ -244,11 +249,8 @@ services:
         soft: -1
         hard: -1
     volumes:
-      #- type: volume
-      #  source: cratedb-data-node-001
-      #  target: /crate-ce/data
-      - type: bind
-        source: /export/node-001
+      - type: volume
+        source: cratedb-data-node-001
         target: /crate-ce/data
       - type: bind
         source: ../../config/cratedb/node-data-001/crate.yml
@@ -287,11 +289,8 @@ services:
         soft: -1
         hard: -1
     volumes:
-      #- type: volume
-      #  source: cratedb-data-node-002
-      #  target: /crate-ce/data
-      - type: bind
-        source: /export/node-002
+      - type: volume
+        source: cratedb-data-node-002
         target: /crate-ce/data
       - type: bind
         source: ../../config/cratedb/node-data-002/crate.yml
@@ -330,11 +329,8 @@ services:
         soft: -1
         hard: -1
     volumes:
-      #- type: volume
-      #  source: cratedb-data-node-003
-      #  target: /crate-ce/data
-      - type: bind
-        source: /export/node-003
+      - type: volume
+        source: cratedb-data-node-003
         target: /crate-ce/data
       - type: bind
         source: ../../config/cratedb/node-data-003/crate.yml

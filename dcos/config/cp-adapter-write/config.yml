@@ -1,6 +1,15 @@
 crate_endpoints:
-- host: "192.168.2.242"
-  port: 20210
+- host: "cratedb-load-balancer-01"
+  port: 5432
+  user: ""
+  password: ""
+  schema: "prometheus"
+  max_connections: 8
+  enable_tls: false
+  allow_insecure_tls: false
+    
+- host: "cratedb-load-balancer-02"
+  port: 5432
   user: ""
   password: ""
   schema: "prometheus"
