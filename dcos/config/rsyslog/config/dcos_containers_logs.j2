@@ -1,0 +1,62 @@
+# Brief: DC/OS Container Logs Rsyslog Config
+# Author: Alejandro Villegas Lopez <avillegas@keedio.com>
+# Installation Date: {{ ansible_date_time.date }}
+################################################################################
+
+# Template for insert container logs into CrateDB by Psql driver
+# CLIQ( Container Logs Insert Query )
+template(name="cliq" type="list" option.sql="on") {
+    constant(value="INSERT INTO container_logs (msg, syslogtag, agent_hostname, timeprocessed, agent_id, container_id, executor_id, framework_id, stream, syslogidentifier) values ('")
+    property(name="msg")
+    constant(value="','")
+    property(name="syslogtag")
+    constant(value="','")
+    property(name="hostname")
+    constant(value="',")
+    property(name="$!timeprocessed")
+    constant(value=",'")
+    property(name="$!agent_id")
+    constant(value="','")
+    property(name="$!container_id")
+    constant(value="','")
+    property(name="$!executor_id")
+    constant(value="','")
+    property(name="$!framework_id")
+    constant(value="','")
+    property(name="$!stream")
+    constant(value="','")
+    property(name="$!syslog_identifier")
+    constant(value="')")
+}
+
+
+
+
+# Modules load
+################################################################################
+
+# TCP Input Module
+module(load="imptcp")
+# Message Modification by External Script
+module(load="mmexternal")
+# Psql Output Module
+module(load="ompgsql")
+
+
+
+
+# Actions
+################################################################################
+
+# TCP Input
+input(type="imptcp" port="61093" address="127.0.0.1" ruleset="rs1")
+
+# RuleSet 
+ruleset(name="rs1") {
+    # Process message
+    action(type="mmexternal" interface.input="fulljson" binary="/opt/kloudsense/scripts/container_log_processor.py")
+    # Write on CrateDB
+{% for host in cratedb_endpoints %}
+    action(type="ompgsql" server="{{ host }}" port="20210" user="" pass="" db="dcos" template="cliq" )
+{% endfor %}
+}

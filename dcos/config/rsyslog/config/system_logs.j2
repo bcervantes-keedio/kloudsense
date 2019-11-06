@@ -1,0 +1,12 @@
+# Brief: System Logs Rsyslog Config
+# Author: Alejandro Villegas Lopez <avillegas@keedio.com>
+# Installation Date: {{ ansible_date_time.date }}
+################################################################################
+
+# Enable Open Module PostGreSQL
+module(load="ompgsql")
+
+# Configure connection to CrateDB by the PGSQL entrypoint
+{% for host in cratedb_endpoints %}
+action(type="ompgsql" server="{{ host }}" port="20210" user="" pass="" db="syslog")
+{% endfor %}

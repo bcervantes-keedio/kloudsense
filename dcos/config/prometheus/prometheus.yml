@@ -1,0 +1,77 @@
+# My Global config
+global:
+  scrape_interval:     2m
+  scrape_timeout:      30s
+  evaluation_interval: 1m
+
+
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+      - drools_connector:9093
+
+rule_files:
+  - "common-rules.yml"
+  - "kloudsense-rules.yml"
+
+
+
+scrape_configs:
+  # Prometheus
+  - job_name: 'DC/OS-Prometheus'
+    static_configs:
+    - targets: ['prometheus:9090']
+
+  # Grafana
+  - job_name: 'DC/OS-Grafana'
+    static_configs:
+    - targets: ['grafana:3000']
+
+  # Alertmanager
+  - job_name: 'DC/OS-Alertmanager'
+    static_configs:
+    - targets: ['alertmanager:9093']
+
+  # CP-Adapter-Write
+  - job_name: 'CP-Adapter-Write'
+    scrape_interval: 30s
+    static_configs:
+    - targets: ['cp-adapter-write:9268']
+
+  # CP-Adapter-Write
+  - job_name: 'CP-Adapter-Read'
+    scrape_interval: 30s
+    static_configs:
+    - targets: ['cp-adapter-read:9268']
+
+  # DC/OS Cluster
+  - job_name: 'DC/OS-Metrics'
+    metrics_path: /metrics
+    scheme: http
+    dns_sd_configs:
+    - names:
+      - master.mesos
+      - slave.mesos
+      refresh_interval: 30s
+      type: A
+      port: 61091
+
+remote_read:
+   - url: http://cp-adapter-read:9268/read
+
+remote_write:
+   - url: http://cp-adapter-write:9268/write
+     remote_timeout: 1m
+     queue_config:
+       capacity: 40000
+       max_shards: 10
+       min_shards: 1
+       max_samples_per_send: 4000
+       batch_send_deadline: 10s
+       min_backoff: 500ms
+       max_backoff: 2100ms
+

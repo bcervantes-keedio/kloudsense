@@ -1,0 +1,61 @@
+#!/bin/bash -
+#title           :environment
+#description     :Script to configure the KloudSense CLI.
+#author          :Alejandro Villegas Lopez (avillegas@keedio.com).
+#===============================================================================
+
+
+#=============================
+# KS Variables
+#===============================================================================
+# Private Variables
+_KS_CLI_TRUE=1
+_KS_CLI_FALSE=0
+_KS_CLI_MODE_CURRENT="none"
+_KS_CLI_MODULES_FILE=""
+_KS_CLI_MODE_DOCKERCOMPOSE_FILE=""
+_KS_CLI_MODE_PROMPT_STR="\033[31m[KS]\033[0m"
+_KS_CLI_VERSION="$(cat $KS_HOME/VERSION)"
+_KS_CLI_IMAGE_PREFIX="ks-"
+
+
+
+
+
+#=============================
+# MSG Functions
+#===============================================================================
+
+# Error Message
+function _ks_err_msg () {
+  echo -e "\033[37m[\033[31mx\033[37m]\033[0m $@"
+}                                             
+                                              
+# Warning Message                             
+function _ks_war_msg () {                     
+  echo -e "\033[37m[\033[33m!\033[37m]\033[0m $@"
+}                                             
+                                              
+# OK Message                                  
+function _ks_ok_msg () {                      
+  echo -e "\033[37m[\033[32m+\033[37m]\033[0m $@"
+}                                             
+                                              
+# Info Message                                
+function _ks_info_msg () {                    
+  echo -e "\033[37m[\033[34m*\033[37m]\033[0m $@"
+}
+
+
+
+
+function _ks_yesno () {
+  local msg=$1
+  read -p "$msg" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    return $_KS_CLI_TRUE
+  else
+    return $_KS_CLI_FALSE
+  fi
+}

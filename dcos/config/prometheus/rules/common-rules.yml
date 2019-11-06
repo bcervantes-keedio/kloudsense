@@ -1,0 +1,102 @@
+groups:
+- name: Hosts Rules
+  rules:
+
+  - alert: DC/OS Host is Down
+    expr: up{job="DC/OS-Metrics"} != 1
+    for: 1m
+    labels:
+      severity: error
+    annotations:
+      summary: "Host '{{ $labels.instance }}' is down"
+      description: "The host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' is Down"
+
+   
+  - alert: DC/OS Slave CPU percent Usage
+    expr: mesos_slave_cpus_percent > 0.75
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slave Host '{{ $labels.host }}' has a high CPU usage"
+      description: "The slave host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high CPU Usage"
+
+
+  - alert: DC/OS Master CPU percent Usage
+    expr: mesos_master_cpus_percent > 0.75
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Master Host '{{ $labels.host }}' has a high CPU usage"
+      description: "The master host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high CPU Usage"
+
+   
+  - alert: DC/OS Slave Memory percent Usage
+    expr: mesos_slave_memory_percent > 0.8
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slave Host '{{ $labels.host }}' has a high Memory usage"
+      description: "The slave host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high Memory Usage"
+
+
+  - alert: DC/OS Master Memory percent Usage
+    expr: mesos_master_memory_percent > 0.8
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Master Host '{{ $labels.host }}' has a high Memory usage"
+      description: "The master host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high Memory Usage"
+
+   
+  - alert: DC/OS Slave Disk percent Usage
+    expr: mesos_slave_disk_percent > 0.9
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slave Host '{{ $labels.host }}' has a high Disk usage"
+      description: "The slave host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high Disk Usage"
+
+
+  - alert: DC/OS Master Disk percent Usage
+    expr: mesos_master_disk_percent > 0.9
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Master Host '{{ $labels.host }}' has a high Disk usage"
+      description: "The master host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high Disk Usage"
+
+   
+  - alert: DC/OS Slave GPU percent Usage
+    expr: mesos_slave_gpu_percent > 0.9
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slave Host '{{ $labels.host }}' has a high GPU usage"
+      description: "The slave host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high GPU Usage"
+
+
+  - alert: DC/OS Master GPU percent Usage
+    expr: mesos_master_gpu_percent > 0.9
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Master Host '{{ $labels.host }}' has a high GPU usage"
+      description: "The master host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has high GPU Usage"
+
+
+  - alert: DC/OS Slave Container Launch Errors
+    expr: mesos_slave_container_launch_errors > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slave Host '{{ $labels.host }}' has container with launch errors"
+      description: "The slave host '{{ $labels.host }}' of '{{ $labels.dcos_cluster_name }}' cluster has containers with launch errors"

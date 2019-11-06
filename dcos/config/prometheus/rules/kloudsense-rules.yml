@@ -1,0 +1,88 @@
+groups:
+- name: Prometheus Remote Storage
+  rules:
+
+  - alert: Write errors on CrateDB
+    expr: delta(crate_adapter_write_crate_failed_total{job="CP-Adapter-Write"}[4m]) > 0
+    for: 2m
+    labels:
+      severity: error
+    annotations:
+      summary: "CrateDB insertion failed"
+      description: "CrateDB-Adapter-Write had {{ $value }} write errors in the last 4 minutes"
+
+
+  - alert: Read errors on CrateDB
+    expr: delta(crate_adapter_read_crate_failed_total{job="CP-Adapter-Read"}[4m]) > 0
+    for: 2m
+    labels:
+      severity: error
+    annotations:
+      summary: "CrateDB insertion failed"
+      description: "CrateDB-Adapter-Read had {{ $value }} read errors in the last 4 minutes"
+
+
+  - alert: Prometheus running Shards
+    expr: prometheus_remote_storage_shards == 8
+    for: 2m
+    labels:
+      severity: error
+    annotations:
+      summary: "Prometheus is using all the shards"
+      description: "Prometheus is using all the available shards to remote write"
+
+
+  - alert: Prometheus dropping samples
+    expr: prometheus_remote_storage_dropped_samples_total != 0
+    for: 1m
+    labels:
+      severity: error
+    annotations:
+      summary: "Prometheus is dropping samples for remote write"
+      description: "Prometheus is dropping samples trying to send to CrateDB"
+
+
+
+
+- name: KloudSense Modules alive
+  rules:
+
+  - alert: Prometheus is UP
+    expr: up{job="DC/OS-Prometheus"} != 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "CrateDB insertion failed"
+
+  - alert: Grafana is UP
+    expr: up{job="DC/OS-Grafana"} != 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "CrateDB insertion failed"
+
+  - alert: CrateDB - Prometheus Adapter for Write Ops is Up
+    expr: up{job="DC/OS-Adapter-Write"} != 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "CrateDB insertion failed"
+
+  - alert: CrateDB - Prometheus Adapter for Read Ops is Up
+    expr: up{job="DC/OS-Adapter-Read"} != 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "CrateDB insertion failed"
+
+  - alert: Alertmanager is UP
+    expr: up{job="DC/OS-Alertmanager"} != 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "CrateDB insertion failed"

@@ -1,0 +1,3 @@
+{
+  "stmt" : "CREATE TABLE syslog.SystemEventsProperties (ID TEXT, SystemEventID INT, ParamName TEXT, ParamValue TEXT)"
+}

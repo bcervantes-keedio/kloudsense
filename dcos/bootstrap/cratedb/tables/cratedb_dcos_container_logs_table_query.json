@@ -1,0 +1,3 @@
+{
+  "stmt" : "CREATE TABLE IF NOT EXISTS dcos.container_logs (msg TEXT, syslogtag TEXT, agent_hostname TEXT, timeprocessed timestamp with time zone, day__generated TIMESTAMP GENERATED ALWAYS AS date_trunc('day', timeprocessed), agent_id TEXT, container_id TEXT, executor_id TEXT, framework_id TEXT, stream TEXT, syslogidentifier TEXT)PARTITIONED BY (day__generated) WITH (number_of_replicas=2)"
+}

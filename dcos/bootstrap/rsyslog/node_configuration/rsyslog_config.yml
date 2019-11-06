@@ -1,0 +1,201 @@
+---
+- hosts: cluster
+  become: yes
+  become_method: sudo
+
+  vars:
+    cratedb_endpoints: "{{ lookup('env','KS_CONFIG_CRATE_ENDPOINT') }}"
+
+  tasks:
+    - name: Install Rsyslog Repo
+      yum_repository:
+        name: rsyslog_v8
+        description: Adiscon CentOS-$releasever - local packages for $basearch
+        baseurl: http://rpms.adiscon.com/v8-stable/epel-$releasever/$basearch
+        enabled: yes
+        gpgcheck: no
+        gpgkey: http://rpms.adiscon.com/RPM-GPG-KEY-Adiscon
+        protect: yes
+
+
+    - name: Install Rsyslog latest
+      yum:
+        name:
+          - rsyslog
+          - rsyslog-pgsql
+        state: latest
+
+
+    - name: debug
+      debug:
+        msg: "CrateDB endpoints: {{ cratedb_endpoints }}"
+
+    - name: Rsyslog Config file for System logs
+      template:
+        src: ../../../config/rsyslog/config/system_logs.j2
+        dest: /etc/rsyslog.d/system_logs.conf
+        owner: root
+        group: root
+        mode: '0664'
+
+
+    - name: Restart Rsyslog
+      service: 
+        name: rsyslog
+        state: restarted
+  
+
+    - name: Checking services
+      service_facts:
+      register: services_state
+
+
+    - name: Rsyslog State
+      debug:
+        msg: "Rsyslog is running :-)"
+      when: services_state.ansible_facts.services['rsyslog.service'].state == "running"
+
+
+
+
+
+- hosts: agents
+  become: yes
+  become_method: sudo
+
+  vars:
+    cratedb_endpoints: "{{ lookup('env','KS_CONFIG_CRATE_ENDPOINT') }}"
+
+  tasks:
+    - name: Check if Python3 is installed
+      raw: test -e /usr/bin/python3.6
+      changed_when: false
+      failed_when: false
+      register: python3_installed
+
+    - name: Install Python3
+      block:
+        - name: Install Python3 Repository
+          yum:
+            name: https://centos7.iuscommunity.org/ius-release.rpm
+            state: present
+        - name: Install Python3 packages
+          yum:
+            name: 
+              - python36u
+              - python36u-libs
+              - python36u-devel
+              - python36u-pip
+            state: present
+
+        - name: Updating Pip3.6
+          pip:
+            name: pip
+            state: latest
+            executable: pip3
+
+      when: python3_installed.rc != 0
+
+
+    - name: Install Systemd Development package
+      yum:
+        name: 
+          - systemd-devel
+          - gcc
+        state: present
+
+
+    - name: Install Dependencies
+      pip:
+        name: systemd
+        state: latest
+        executable: /usr/local/bin/pip3
+
+  
+    - name: Rsyslog Config file for DC/OS containers logs
+      template:
+        src: ../../../config/rsyslog/config/dcos_containers_logs.j2
+        dest: /etc/rsyslog.d/dcos_containers_logs.conf
+        owner: root
+        group: root
+        mode: '0664'
+  
+
+    - name: Make scripts folder
+      file:
+        path: /opt/kloudsense/scripts/
+        state: directory
+        recurse: yes
+        owner: root
+        group: root
+        mode: '0775'
+  
+
+    - name: Container Logs Processor script
+      copy:
+        src: ../../../config/rsyslog/src/container_log_processor.py
+        dest: /opt/kloudsense/scripts/container_log_processor.py
+        owner: root
+        group: root
+        mode: '0775'
+  
+
+    - name: Container Logs Proxy Rsyslog
+      copy:
+        src: ../../../config/rsyslog/src/dcos_rsyslog_tcp_proxy.py
+        dest: /opt/kloudsense/scripts/dcos_rsyslog_tcp_proxy.py
+        owner: root
+        group: root
+        mode: '0775'
+  
+
+    - name: Rsyslog Config file for DC/OS containers logs
+      copy:
+        src: ../../../config/rsyslog/config/dcos_rsyslog_tcp_proxy.service
+        dest: /etc/systemd/system/dcos_rsyslog_tcp_proxy.service
+        owner: root
+        group: root
+        mode: '0664'
+
+
+    - name: Adding DC/OS Rsyslog TCP Proxy Service
+      systemd:
+          daemon_reload: yes
+
+
+    - name: Stop DC/OS Fluent-bit
+      service: 
+        name: dcos-fluent-bit
+        state: stopped
+        enabled: no
+
+
+    - name: Restart Rsyslog
+      service: 
+        name: rsyslog
+        state: restarted
+  
+
+    - name: Start Proxy
+      service: 
+        name: dcos_rsyslog_tcp_proxy
+        state: restarted
+        enabled: yes
+
+
+    - name: Checking services
+      service_facts:
+      register: services_state
+
+
+    - name: Rsyslog State
+      debug:
+        msg: "Rsyslog is running :-)"
+      when: services_state.ansible_facts.services['rsyslog.service'].state == "running"
+
+
+    - name: Proxy State
+      debug:
+        msg: "DC/OS proxy is running :-)"
+      when: services_state.ansible_facts.services['dcos_rsyslog_tcp_proxy.service'].state == "running"
+
