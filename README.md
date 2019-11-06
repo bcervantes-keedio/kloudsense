@@ -103,7 +103,8 @@ The rules, dags and config are customizable for each cluster and context.
   - **CrateDB-CE-lb-2-PSQL**: http://localhost:20211
   - **Airflow-Webserver**: http://localhost:20300
   - **Drools-WildFly**: http://localhost:20400
-  - **Drools-Business-Central**: http://localhost:20410
+  - **Drools-WildFly-Management-Console**: http://localhost:20410 Credentials: (User: 'keedio' Password: 'keedio')
+  - **Drools-Business-Central**: http://localhost:20400/business-central Credentials: (User: 'workbench' Password: 'workbench')
 
 
 

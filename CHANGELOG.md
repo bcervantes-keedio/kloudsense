@@ -1,4 +1,4 @@
-0.3 (XX/YY/2019)
+0.2 (06/11/2019)
 -----------------------------------------
 KloudSense basic architecture for deploy on standalone
 

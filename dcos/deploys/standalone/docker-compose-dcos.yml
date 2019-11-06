@@ -151,7 +151,7 @@ services:
 
 
   cratedb-node-load-balancer-01:
-    image: keedio/ks-cratedb-ce:0.1.2-beta
+    image: keedio/ks-cratedb-ce:0.1.3-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-node-load-balancer-01
     hostname: ks-dcos-cratedb-node-load-balancer-01
@@ -188,7 +188,7 @@ services:
 
 
   cratedb-node-load-balancer-02:
-    image: keedio/ks-cratedb-ce:0.1.2-beta
+    image: keedio/ks-cratedb-ce:0.1.3-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-node-load-balancer-02
     hostname: ks-dcos-cratedb-node-load-balancer-02
@@ -225,7 +225,7 @@ services:
 
 
   cratedb-node-001:
-    image: keedio/ks-cratedb-ce:0.1.2-beta
+    image: keedio/ks-cratedb-ce:0.1.3-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-node-001
     hostname: ks-dcos-cratedb-node-001
@@ -265,7 +265,7 @@ services:
 
 
   cratedb-node-002:
-    image: keedio/ks-cratedb-ce:0.1.2-beta
+    image: keedio/ks-cratedb-ce:0.1.3-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-node-002
     hostname: ks-dcos-cratedb-node-002
@@ -305,7 +305,7 @@ services:
 
 
   cratedb-node-003:
-    image: keedio/ks-cratedb-ce:0.1.2-beta
+    image: keedio/ks-cratedb-ce:0.1.3-beta
     restart: on-failure
     container_name: ks-dcos-cratedb-node-003
     hostname: ks-dcos-cratedb-node-003
