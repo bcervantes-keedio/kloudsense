@@ -1,6 +1,6 @@
 # ![KS_Build](img/ks_icon_readme.png)
 
-[![KS_Build](https://img.shields.io/badge/Build-passing-green?style=flat)](https://github.com/kloudsense/kloudsense/releases/tag/0.2-beta) [![KS_Version](https://img.shields.io/github/v/tag/kloudsense/kloudsense?color=purple&label=KS Version)](https://github.com/kloudsense/kloudsense/releases/tag/0.2-beta) [![KS_License](http://img.shields.io/:License-Apache%202-blue.svg?style=flat&logo=apache&logoColor=yellow)](http://www.apache.org/licenses/LICENSE-2.0.txt) [![KS_Version](https://img.shields.io/badge/Docker--CE-19.03.2-blue?style=flat&logo=docker)](https://github.com/kloudsense/kloudsense/releases/tag/0.2-beta)
+[![KS_Build](https://img.shields.io/badge/Build-passing-green?style=flat)](https://github.com/kloudsense/kloudsense/releases/tag/0.2-beta) [![KS_Version](https://img.shields.io/github/v/release/kloudsense/kloudsense?color=purple&include_prereleases&label=KS%20Version)](https://github.com/kloudsense/kloudsense/releases/tag/0.2-beta) [![KS_License](http://img.shields.io/:License-Apache%202-blue.svg?style=flat&logo=apache&logoColor=yellow)](http://www.apache.org/licenses/LICENSE-2.0.txt) [![KS_Version](https://img.shields.io/badge/Docker--CE-19.03.2-blue?style=flat&logo=docker)](https://github.com/kloudsense/kloudsense/releases/tag/0.2-beta)
 
 
 
