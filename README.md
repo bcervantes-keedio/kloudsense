@@ -66,7 +66,7 @@ KloudSense is an OpenSource project, and also uses some projects Apache licensed
   - **Alertmanager**: Sends alerts messages when a Prometheus alert triggers.
   - **CrateDB-CE**: CrateDB Community Edition for long-term  storage of metrics, containers logs and system logs.
   - **Crate-Adapter**: **(Crate-Prometheus Adapter for us (CPA))** Connect Prometheus with CrateDB for remote Write/Read.
-  - **Drools**: Logic system based on rules to determine the cause of the alert and the properly solution. When the rules have been determined the error, Drools can trigger the execution of one or more Airflow DAGs to try to fix the error automatically.
+  - **Drools**: Logic system based on rules to determine the cause of the alert and offers the correct solution. When the rules have been determined the error, Drools can trigger the execution of one or more Airflow DAGs to try to fix the error automatically.
   - **Airflow**: Workflow Manager to execute work on monitored nodes that perform maintenance tasks.
 
 
@@ -74,10 +74,10 @@ KloudSense is an OpenSource project, and also uses some projects Apache licensed
 KloudSense own componentes developed by Keedio:
   - **Prometheus-Drools Adapter (PDA)**: This module receives the alerts sent by Prometheus (like the alerts sent to Alertmanager) and sends each of these alerts to a specified container in Drools to be processed.
   - **Rsyslog-Config**: These configuration files and codes are used to send the DC/OS system and containers logs to CrateDB for further analysis.
-  - **Docker-Compose Deploy**: Deploy in standalone and connections of this system with docker-compose
-  - **Analytics**: Predictive and anomaly detection models for look up possible errors on the target cluster.
-  - **Alert Rules**: Main Prometheus alerting rules for detect the more common error situations.
-  - **Drools Rules**: Rules to make decisions based in the Prometheus Alerts.
+  - **Docker-Compose Deploy**: Deploys in standalone and  enables connections of this system with docker-compose
+  - **Analytics**: Offers two types of models; predictive models and anomaly detection models. KloudSense allows the user both to detect errors that currently affects the cluster as well as future situations that may require preventive action.
+  - **Alert Rules**: Main Prometheus rules system for detection of the more common errors.
+  - **Drools Rules**: Rules to make decisions based on Prometheus alerts.
   - **Airflow DAGs**: DAGs of Apache Airflow to make actions on the cluster. 
 
 The rules, dags and config are customizable for each cluster and context.
@@ -170,7 +170,7 @@ There are some files you can edit to configure KloudSense:
 
         **NOTE!**: the user to login in the DC/OS hosts must have administrative permision.
 
-      To help you in this step, there is a little bash script to make this faster. The script requires that the inventory file of the step 3 was completed.
+      To help you in this step, there is a little bash script to make this faster. The script requires that the inventory file used in step 3 was completed.
       * Script path = tools/ssh_key_installer.sh
 
   3. Edit the inventory file and configure your nodes.
@@ -187,7 +187,7 @@ There are some files you can edit to configure KloudSense:
 
 
 #### Download and build KloudSense Modules
-KloudSense has a interactive shell based on bash to make more easy the configuration, management and deployment of the system. This shell is called 'kshell'. We recommend to use it with the following steps:
+KloudSense has an interactive shell based on bash for the configuration, management and deployment of the system. This shell is called 'kshell'. We recommend to use it with the following steps:
 ```sh
 # Run the assistant
 ./kshell
@@ -241,7 +241,7 @@ ks module list
 > [*] Module Name: ks-rules-engine:0.1-beta                            [present] [pulled]
 > [*] Module Name: ks-rules-engine-connector:0.1-beta                  [present] [pulled]
 
-# If you see the same output means that all modules are ready
+# If you see the same output, it means that all modules are ready
 ```
 
 
@@ -283,7 +283,7 @@ ks system start
 
 
 ### Help
-If you have problems with the assistant commands try following the help messages
+If you have any problem with the assistant commands try following the help messages
 ```sh
 # Main Help
 ks help
