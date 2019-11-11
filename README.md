@@ -11,14 +11,14 @@ KloudSense BigData Observability Platform. Developed by Keedio.
 
 
 ## What is it?
-KloudSense is a Observability platform for monitoring, alerting, analytics and prediction of a BigData cluster's state. This provides information about the current state of cluster and it's possible errors on the future. Also, this platform can make operations in cluster's nodes based in a rules-engine which decides the correct way to fix the known errors.
+KloudSense is a Observability platform for monitoring, alerting, analytics and prediction of a BigData cluster's state. This tool provides information about the current state of the cluster, as well as being able to predict possible errors. With these predictions, KloudSense automatically undertakes corrective procedures in cluster's infrastructure; based in its own rules-engine, to prevent these errors from occurring.
 
 
 
 
 
 ## Capabilities
-KloudSense capabilities depends on the target. Now KloudSense only supports DC/OS clusters monitoring, but in the future it will can work also with Cloudera clusters.
+KloudSense capabilities depends on the cluster’s framework. Currently, KloudSense only supports DC/OS clusters monitoring. Development is on its way to support Cloudera's based clusters.
 
 
 
@@ -32,21 +32,19 @@ KloudSense capabilities depends on the target. Now KloudSense only supports DC/O
 
 ### DC/OS (D2IQ)
 #### Data Collected
-KloudSense can collect data from DC/OS usage metrics, DC/OS components logs, and running containers logs. All these information is stored in CrateDB for analytics. 
+KloudSense can collect data from DC/OS usage metrics, DC/OS components logs, and running containers logs. All this information is stored in a CrateDB for analytics purpose.
 
 #### Analytics
-Currently are in development some predictive models, metrics monitoring and anomalies detection for detect possible future errors and determine the cause of them.
+Currently are in development: predictive modelling, metrics monitoring and anomaly detection for detect possible future errors and determine the root causes.
 
 #### Storage
-The program can store as much information in its database as its storage can support. For this, CrateDB is used as the main database of the platform. This can store the information in a distributed way and keeping several copies to guarantee the availability of the collected data.
+Kloudsense can store as much information in its database as it is allowed to. Therefore, CrateDB is used as the main database of the platform. CrateDB can store this information in a distributed way, keeping several copies to guarantee the availability of the collected data.
 
 #### Visualization
-KloudSense works with Grafana to create custom panels to graphically represent the state metrics of the current cluster.
+KloudSense works with Grafana to create dashboards  enabling graphical representation of the current state of the cluster.
 
-#### Alerting
-Alerting rules can be defined in Prometheus. When any alert fires, Prometheus can send this information to the rules engine to begin their evaluation and alert somebody with Alertmanager.
-
-
+#### Alerts
+Alerts can be defined in Prometheus. When any alert triggers, Prometheus sends this information to the rules engine to begin their evaluation and alert the users with Alertmanager.
 
 ### Cloudera
 
@@ -64,18 +62,18 @@ Alerting rules can be defined in Prometheus. When any alert fires, Prometheus ca
 KloudSense is an OpenSource project, and also uses some projects Apache licensed. This projects are:
 
   - **Grafana**: Grafana is the Front-End module to draw Dashboards with the data stored in Prometheus.
-  - **Prometheus**: Prometheus is used to ingest short-term storage of metrics (15 days by default). Also it's works as DataSource for Grafana.
-  - **Alertmanager**: Sends alerts messages when a Prometheus alert fire.
+  - **Prometheus**: Prometheus is used to ingest short-term storage of metrics (15 days by default). Also acting as a data source for Grafana.
+  - **Alertmanager**: Sends alerts messages when a Prometheus alert triggers.
   - **CrateDB-CE**: CrateDB Community Edition for long-term  storage of metrics, containers logs and system logs.
   - **Crate-Adapter**: **(Crate-Prometheus Adapter for us (CPA))** Connect Prometheus with CrateDB for remote Write/Read.
-  - **Drools**: Expert system based on rules to determine the cause of the alert and the properly solution. When the rules have been determined the error, Drools can trigger the execution of one or some Airflow DAGs to try to fix the error automatically.
+  - **Drools**: Logic system based on rules to determine the cause of the alert and the properly solution. When the rules have been determined the error, Drools can trigger the execution of one or more Airflow DAGs to try to fix the error automatically.
   - **Airflow**: Workflow Manager to execute work on monitored nodes that perform maintenance tasks.
 
 
 
 KloudSense own componentes developed by Keedio:
-  - **Prometheus-Drools Adapter (PDA)**: This module receives the alerts sent by Prometheus (like the alerts sent to Alertmanager) and send one by one these alerts to a specified container in Drools to being processed.
-  - **Rsyslog-Config**: This configuration files and codes are used to send the DC/OS system and containers logs to CrateDB for further analytics.
+  - **Prometheus-Drools Adapter (PDA)**: This module receives the alerts sent by Prometheus (like the alerts sent to Alertmanager) and sends each of these alerts to a specified container in Drools to be processed.
+  - **Rsyslog-Config**: These configuration files and codes are used to send the DC/OS system and containers logs to CrateDB for further analysis.
   - **Docker-Compose Deploy**: Deploy in standalone and connections of this system with docker-compose
   - **Analytics**: Predictive and anomaly detection models for look up possible errors on the target cluster.
   - **Alert Rules**: Main Prometheus alerting rules for detect the more common error situations.
@@ -157,7 +155,7 @@ There are some files you can edit to configure KloudSense:
 ---
 ### DC/OS Deploy
 
-#### Steps
+#### Intructions
   1. Edit the Mesos DNS IP address of the DC/OS Cluster in *./dcos/config/prometheus/resolv.conf*.
      ```sh
      sed -i 's/nameserver .*/nameserver <MESOS_DNS_IP>/g' dcos/config/prometheus/resolv.conf
@@ -168,9 +166,9 @@ There are some files you can edit to configure KloudSense:
       ssh-copy-id -i ~/.ssh/mykey user@host
       ssh-keyscan -H host >> ~/.ssh/known_hosts
       ```
-      If your cluster have so much nodes, you can use a loop to make the config process more easy.
+      If your cluster is composed of many nodes, you can use a loop to make the config process more manageable.
 
-        **NOTE!**: the user to login in the DC/OS hosts must have administration permises.
+        **NOTE!**: the user to login in the DC/OS hosts must have administrative permision.
 
       To help you in this step, there is a little bash script to make this faster. The script requires that the inventory file of the step 3 was completed.
       * Script path = tools/ssh_key_installer.sh
@@ -188,8 +186,8 @@ There are some files you can edit to configure KloudSense:
 
 
 
-#### Downlaod and build KloudSense Modules
-KloudSense have a interactive shell based on bash to make more easy the configuration, management and deployment of the system. This shell is called 'kshell'. We recommend to use it with the following steps:
+#### Download and build KloudSense Modules
+KloudSense has a interactive shell based on bash to make more easy the configuration, management and deployment of the system. This shell is called 'kshell'. We recommend to use it with the following steps:
 ```sh
 # Run the assistant
 ./kshell
