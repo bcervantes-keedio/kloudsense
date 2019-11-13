@@ -11,7 +11,7 @@ KloudSense BigData Observability Platform. Developed by Keedio.
 
 
 ## What is it?
-KloudSense is a Observability platform for monitoring, alerting, analytics and prediction of a BigData cluster's state. This tool provides information about the current state of the cluster, as well as being able to predict possible errors. With these predictions, KloudSense automatically undertakes corrective procedures in cluster's infrastructure; based in its own rules-engine, to prevent these errors from occurring.
+KloudSense is a Observability platform for monitoring, alerting, analytics and prediction of a BigData cluster's state. This tool provides information about the current state of the cluster, as well as being able to predict possible errors. With these predictions, KloudSense automatically undertakes corrective procedures in the cluster's infrastructure. These predictions are based on its own rules-engine, to prevent these errors from occurring.
 
 
 
@@ -32,7 +32,7 @@ KloudSense capabilities depends on the cluster’s framework. Currently, KloudSe
 
 ### DC/OS (D2IQ)
 #### Data Collected
-KloudSense can collect data from DC/OS usage metrics, DC/OS components logs, and running containers logs. All this information is stored in a CrateDB for analytics purpose.
+KloudSense can collect data from DC/OS usage metrics, DC/OS components logs, and running containers logs. All this information is stored in a CrateDB database for analytics purposes.
 
 #### Analytics
 Currently are in development: predictive modelling, metrics monitoring and anomaly detection for detect possible future errors and determine the root causes.
