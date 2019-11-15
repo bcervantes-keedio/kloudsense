@@ -66,7 +66,7 @@ KloudSense is an OpenSource project, and also uses some projects Apache licensed
   - **Alertmanager**: Sends alerts messages when a Prometheus alert triggers.
   - **CrateDB-CE**: CrateDB Community Edition for long-term  storage of metrics, containers logs and system logs.
   - **Crate-Adapter**: **(Crate-Prometheus Adapter for us (CPA))** Connect Prometheus with CrateDB for remote Write/Read.
-  - **Drools**: Logic system based on rules to determine the cause of the alert and offers the correct solution. When the rules have been determined the error, Drools can trigger the execution of one or more Airflow DAGs to try to fix the error automatically.
+  - **Drools**: Expert system based on rules to determine the cause of the alert and offers the correct solution. When the rules have been determined the error, Drools can trigger the execution of one or more Airflow DAGs to try to fix the error automatically.
   - **Airflow**: Workflow Manager to execute work on monitored nodes that perform maintenance tasks.
 
 
